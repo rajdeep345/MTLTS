@@ -68,7 +68,7 @@ def convert_tree_to_tensors(tree, device=device):
 
 	features = _gather_node_attributes(tree, 'f')
 	attention = _gather_node_attributes(tree, 'a')
-	old_features = _gather_node_attributes(tree, 'k')
+	# old_features = _gather_node_attributes(tree, 'k')
 	labels = _gather_node_attributes(tree, 'l')		
 	root_label = [labels[0]]
 	adjacency_list = _gather_adjacency_list(tree)
@@ -79,7 +79,7 @@ def convert_tree_to_tensors(tree, device=device):
 	return {
 		'f': torch.tensor(features, dtype=torch.long),
 		'a':torch.tensor(attention,  dtype=torch.float32),
-		'k':torch.tensor(old_features, dtype=torch.float32),
+		# 'k':torch.tensor(old_features, dtype=torch.float32),
 		'l': torch.tensor(labels,  dtype=torch.float32),
 		'root_l': torch.tensor(root_label, dtype=torch.float32),
 		'root_n': torch.tensor(root_node,  dtype=torch.int64),
@@ -140,7 +140,7 @@ def batch_tree_input(batch):
 
 	batched_features = torch.cat([b['f'] for b in batch])
 	batched_attentions = torch.cat([b['a'] for b in batch])
-	batched_old_features = torch.cat([b['k'] for b in batch])
+	# batched_old_features = torch.cat([b['k'] for b in batch])
 	batched_node_order = torch.cat([b['node_order'] for b in batch])
 
 	idx = 0
@@ -167,7 +167,7 @@ def batch_tree_input(batch):
 	return {
 		'f': batched_features,
 		'a': batched_attentions,
-		'k': batched_old_features,
+		# 'k': batched_old_features,
 		'node_order': batched_node_order,
 		'edge_order': batched_edge_order,
 		'adjacency_list': batched_adjacency_list,
@@ -213,8 +213,8 @@ class TreeLSTM(torch.nn.Module):
 		self.fc = torch.nn.Linear(self.out_features, 2)
 	
 	
-	def forward(self, features, attentions, old_features, node_order, adjacency_list, edge_order, root_node, root_label):
-	# def forward(self, features, attentions, node_order, adjacency_list, edge_order, root_node, root_label):		
+	# def forward(self, features,attentions,old_features,node_order, adjacency_list, edge_order, root_node, root_label):
+	def forward(self, features, attentions, node_order, adjacency_list, edge_order, root_node, root_label):		
 		'''Run TreeLSTM model on a tree data structure with node features
 
 		Takes Tensors encoding node features, a tree node adjacency_list, and the order in which 
@@ -236,13 +236,13 @@ class TreeLSTM(torch.nn.Module):
 
 		if self.mode=="cls":
 			output_vectors = hidden_states[:,0]
-			output_vectors = torch.cat([output_vectors, old_features], axis=1)
+			# output_vectors = torch.cat([output_vectors, old_features], axis=1)
 		if self.mode=="avg":
 			input_mask_expanded = attentions.unsqueeze(-1).expand(hidden_states.size()).float()
 			sum_embeddings = torch.sum(hidden_states * input_mask_expanded, 1)
 			sum_mask = input_mask_expanded.sum(1)
 			output_vectors= sum_embeddings / sum_mask
-			output_vectors = torch.cat([output_vectors, old_features], axis=1)
+			# output_vectors = torch.cat([output_vectors, old_features], axis=1)
 		
 		for n in range(node_order.max() + 1):
 			self._run_lstm(n, h, c, output_vectors, node_order, adjacency_list, edge_order)
@@ -338,7 +338,7 @@ def train(tree_batch, mode="train"):
 	h, h_root, c = model(
 		tree_batch['f'].to(device),
 		tree_batch['a'].to(device),
-		tree_batch['k'].to(device),
+		# tree_batch['k'].to(device),
 		tree_batch['node_order'].to(device),
 		tree_batch['adjacency_list'].to(device),
 		tree_batch['edge_order'].to(device),
@@ -365,7 +365,7 @@ def train(tree_batch, mode="train"):
 	return loss, pred_label, g_labels, err_count
 
 
-tree_path = './Parsed-Trees-Pad32_FeatBERT40_Depth5_maxR5/'
+tree_path = './Parsed-Trees-Pad32_FeatBERT_Depth5_maxR5/'
 files = ['charliehebdo.txt', 'germanwings-crash.txt', 'ottawashooting.txt','sydneysiege.txt']
 
 tree_li = {}
@@ -407,11 +407,11 @@ for lr in lr_list:
 		torch.backends.cudnn.benchmark = False
 
 		path = "./Models/"
-		IN_FEATURES = 808
+		IN_FEATURES = 768
 		OUT_FEATURES = 128
 		NUM_ITERATIONS = 10
 		BATCH_SIZE = 16
-		name = path + "stl_verification_featBERT40.pt"
+		name = path + "stl_verification_featBERT.pt"
 		model = TreeLSTM(IN_FEATURES, OUT_FEATURES, mode="cls").train()
 		model.cuda()
 		test_model = TreeLSTM(IN_FEATURES, OUT_FEATURES, mode="cls")
@@ -430,33 +430,31 @@ for lr in lr_list:
 				test_trees.extend(val_li[filename])
 			else:
 				curr_tree_dataset = TreeDataset(tree_li[filename])
-				train_trees.append(curr_tree_dataset)
+				train_trees.extend(curr_tree_dataset)
 				val_data.extend(TreeDataset(val_li[filename]))
 		
 		print("Size of test data", len(test_trees))
 		print("size of training data", sum([len(i) for i in (train_trees)]))
 		print("\ntraining started....")
 		prev_loss = 1
-		prev_acc = 0
+		prev_acc = 0		
 		for i in range(NUM_ITERATIONS):
 			model.train()
 			# model.zero_grad() 
 			total_loss = 0
-			data_gen = []
 			length = []
-			
-			for k in range(3):
-				data_gen.append(DataLoader(
-					train_trees[k],
-					collate_fn=batch_tree_input,
-					batch_size=BATCH_SIZE,
-					shuffle = True
-				))
-			
+			data_gen = DataLoader(
+				train_trees,
+				collate_fn=batch_tree_input,
+				batch_size=BATCH_SIZE,
+				shuffle = True
+			)
+
 			val_gen = DataLoader(val_data,
 					collate_fn=batch_tree_input,
 					batch_size=BATCH_SIZE,
 					shuffle = True)
+			
 			j = 0
 			avg_loss=0
 			ground_labels = []
@@ -464,34 +462,33 @@ for lr in lr_list:
 			val_ground_labels = []
 			val_predicted_labels= []
 			err_count = 0
-			for a, b, c in itertools.zip_longest(data_gen[0],data_gen[1],data_gen[2], fillvalue=-1): 
-				for tree_batch in [a,b,c]:
-					if tree_batch!=-1:
-						loss, p_labels, g_labels, err = train(tree_batch, "train")
-						err_count += err
-						if err!=1:
-							ground_labels.extend(g_labels)
-							predicted_labels.extend(p_labels)
-							j = j+1
-							avg_loss += loss
-							total_loss += loss
-					# torch.cuda.empty_cache() 
+			for tree_batch in data_gen:
+				loss,p_labels,g_labels,err = train(tree_batch,"train")
+				err_count+=err
+				if err!=1:
+					ground_labels.extend(g_labels)
+					predicted_labels.extend(p_labels)
+					j = j+1
+					avg_loss += loss
+					total_loss += loss
+				# torch.cuda.empty_cache() 
 			
-			print("validation started..", len(val_data))
+			print("validation started..",len(val_data))
 			model.eval()
 			val_avg_loss = 0
 			val_j = 0
 			with torch.no_grad():
 				for batch in val_gen:
-					loss, p_labels, g_labels, err = train(batch, "eval")
+					loss,p_labels,g_labels,err = train(batch,"eval")
 					err_count+=err
 					if err!=1:
 						val_ground_labels.extend(g_labels)
 						val_predicted_labels.extend(p_labels)
 						val_j += 1
 						val_avg_loss += loss
-					# torch.cuda.empty_cache() 
+					# torch.cuda.empty_cache()
 			val_acc = accuracy_score(val_ground_labels,val_predicted_labels)
+			val_f1 = f1_score(val_ground_labels,val_predicted_labels)
 			val_loss = val_avg_loss/val_j
 			'''
 			if(prev_acc<=val_acc):
@@ -508,6 +505,7 @@ for lr in lr_list:
 			print('Validation loss: ', val_loss)
 			print('training accuracy: ', accuracy_score(ground_labels,predicted_labels))
 			print('Validation accuracy: ', val_acc)
+			print('Validation f1 score: ',val_f1)
 			print('Training confusion matrix: ', confusion_matrix(ground_labels, predicted_labels))
 
 			if ((i+1) % 5 == 0 and i > 0):
@@ -524,7 +522,7 @@ for lr in lr_list:
 							h_test,h_test_root,c = test_model(
 									test['f'].to(device),
 									test['a'].to(device),
-									test['k'].to(device),
+									# test['k'].to(device),
 									test['node_order'].to(device),
 									test['adjacency_list'].to(device),
 									test['edge_order'].to(device),
