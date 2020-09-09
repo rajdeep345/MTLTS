@@ -1,10 +1,13 @@
 import os
 import sys
+import math
+import copy
 import argparse
 import codecs
 import random
 import numpy
 import itertools
+import pandas as pd
 import torch
 import torch.nn.functional as F
 from torch.utils.data import Dataset, IterableDataset, DataLoader
@@ -14,10 +17,13 @@ from transformers import *
 # import matplotlib.pyplot as plt
 # from tqdm import tqdm
 
+from fairseq.data.encoders.fastbpe import fastBPE
+from fairseq.data import Dictionary
+
 if __name__ == "__main__":
 	parser = argparse.ArgumentParser()
 	parser.add_argument('--gpu_id', type=int, default=0)
-	parser.add_argument('--model_name', type=str, default="BERT") 
+	parser.add_argument('--model_name', type=str, default="BERTWEET") 
 	parser.add_argument('--in_features', type=int, default=768)
 	parser.add_argument('--save_policy', type=str, default="loss")
 	parser.add_argument('--loss_fn', type=str, default="nw")
@@ -26,11 +32,11 @@ if __name__ == "__main__":
 	parser.add_argument('--wd', type=float, default=0.01)
 	parser.add_argument('--use_dropout', type=str, default="n")
 	parser.add_argument('--classifier_dropout', type=float, default=0.4)
-	parser.add_argument('--tree', type=str, default="new")
+	# parser.add_argument('--tree', type=str, default="new")
 	parser.add_argument('--events', type=int, default=4)
 	parser.add_argument('--iters', type=int, default=10)
 	parser.add_argument('--bs', type=int, default=16)
-	parser.add_argument('--seed', type=int, default=40)
+	parser.add_argument('--seed', type=int, default=1955)
 	parser.add_argument('--test_file', type=str, default="german")
 
 	args = parser.parse_args()
@@ -59,17 +65,15 @@ if __name__ == "__main__":
 	CLASSIFIER_DROPOUT = args.classifier_dropout
 	if USE_DROPOUT == 'y':
 		print(f'CLASSIFIER_DROPOUT = {CLASSIFIER_DROPOUT}')
-	TREE_VERSION = args.tree
-	print(f'TREE_VERSION = {TREE_VERSION}')
+	# TREE_VERSION = args.tree
+	# print(f'TREE_VERSION = {TREE_VERSION}')
 	NO_OF_EVENTS = args.events
 	print(f'NO_OF_EVENTS = {NO_OF_EVENTS}')
 	NUM_ITERATIONS = args.iters
 	print(f'NUM_ITERATIONS = {NUM_ITERATIONS}')
 	BATCH_SIZE = args.bs
 	print(f'BATCH_SIZE = {BATCH_SIZE}')
-	lr_list = [2e-5]
-	# lr_list = [5e-6, 1e-5, 2e-5, 5e-5, 1e-4]
-
+	lr_list = [5e-6, 1e-5, 2e-5, 5e-5, 1e-4]
 	print(f'LEARNING_RATES = {str(lr_list)}')
 	TRAINABLE_LAYERS = [0,1,2,3,4,5,6,7,8,9,10,11]
 	print(f'TRAINABLE_LAYERS = {str(TRAINABLE_LAYERS)}')
@@ -81,10 +85,6 @@ if __name__ == "__main__":
 	seed_val = args.seed
 	print(f'\nSEED = {str(seed_val)}\n\n')
 
-	# random.seed(seed_val)
-	# numpy.random.seed(seed_val)
-	# torch.manual_seed(seed_val)
-	# torch.cuda.manual_seed(seed_val)
 
 
 # # If there's a GPU available...
@@ -101,9 +101,26 @@ else:
 	print('No GPU available, using the CPU instead.')
 	device = torch.device("cpu")
 
+
+
 torch.backends.cudnn.deterministic = True
 torch.backends.cudnn.benchmark = False
 torch.autograd.set_detect_anomaly(True)
+# To make results reproducable
+random.seed(seed_val)
+numpy.random.seed(seed_val)
+torch.manual_seed(seed_val)
+torch.cuda.manual_seed(seed_val)
+
+
+
+if MODEL_NAME == 'BERT':	
+	tokenizer = BertTokenizer.from_pretrained('bert-base-cased')
+elif MODEL_NAME == 'ROBERTA':
+	tokenizer = RobertaTokenizer.from_pretrained('roberta-base')
+elif MODEL_NAME == 'BERTWEET':
+	tweetconfig = RobertaConfig.from_pretrained("/home/rajdeep/MTL_VeriSumm/BERTweet_base_transformers/config.json")			
+
 
 sigmoid_fn = torch.nn.Sigmoid()
 
@@ -142,7 +159,7 @@ def _gather_adjacency_list(node):
 	return adjacency_list
 
 
-def convert_tree_to_tensors(tree, device=device):
+def convert_tree_to_tensors(tree, tweet_id, device=device):
 	# Label each node with its walk order to match nodes to feature tensor indexes
 	# This modifies the original tree as a side effect
 	_label_node_index(tree)
@@ -150,7 +167,8 @@ def convert_tree_to_tensors(tree, device=device):
 	features = _gather_node_attributes(tree, 'f')
 	attention = _gather_node_attributes(tree, 'a')
 	old_features = _gather_node_attributes(tree, 'k')
-	labels = _gather_node_attributes(tree, 'l')		
+	labels = _gather_node_attributes(tree, 'l')
+	tweetid = tweet_id
 	root_label = [labels[0]]
 	adjacency_list = _gather_adjacency_list(tree)
 
@@ -167,6 +185,7 @@ def convert_tree_to_tensors(tree, device=device):
 		'node_order': torch.tensor(node_order,  dtype=torch.int64),
 		'adjacency_list': torch.tensor(adjacency_list,  dtype=torch.int64),
 		'edge_order': torch.tensor(edge_order,  dtype=torch.int64),
+		'tweet_id' : torch.tensor(tweet_id, dtype=torch.long)
 	}
 
 
@@ -272,7 +291,7 @@ def unbatch_tree_tensor(tensor, tree_sizes):
 class TreeLSTM(torch.nn.Module):
 	'''PyTorch TreeLSTM model that implements efficient batching.
 	'''
-	def __init__(self, model_name, trainable_layers, in_features, out_features, classifier_dropout, mode):
+	def __init__(self, model_name, trainable_layers, in_features, out_features, classifier_dropout, mode, tweetconfig=tweetconfig):
 		'''TreeLSTM class initializer
 
 		Takes in int sizes of in_features and out_features and sets up model Linear network layers.
@@ -285,16 +304,16 @@ class TreeLSTM(torch.nn.Module):
 		self.model_name = model_name
 		
 		if model_name == 'BERT':
-			self.BERT_model = BertModel.from_pretrained("bert-base-cased")
+			self.BERT_model = BertModel.from_pretrained("bert-base-cased", output_attentions=True)
 		elif model_name == 'ROBERTA':
-			self.BERT_model = RobertaModel.from_pretrained("roberta-base")
-		elif model_name == 'XLNET':
-			self.BERT_model = XLNetModel.from_pretrained("xlnet-base-cased")
-		elif model_name == 'T5':
-			self.BERT_model = T5Model.from_pretrained("t5-base")
-		else:
-			# Default BERT
-			self.BERT_model = BertModel.from_pretrained("bert-base-cased")
+			self.BERT_model = RobertaModel.from_pretrained("roberta-base", output_attentions=True)
+		elif model_name == 'BERTWEET':
+			self.BERT_model = RobertaModel.from_pretrained("/home/rajdeep/MTL_VeriSumm/BERTweet_base_transformers/model.bin", config=tweetconfig)		
+		
+		# elif model_name == 'XLNET':
+		# 	self.BERT_model = XLNetModel.from_pretrained("xlnet-base-cased")
+		# elif model_name == 'T5':
+		# 	self.BERT_model = T5Model.from_pretrained("t5-base")
 				
 		
 		# for name, param in self.BERT_model.named_parameters():
@@ -325,15 +344,14 @@ class TreeLSTM(torch.nn.Module):
 		
 		self.classifier_dropout = torch.nn.Dropout(classifier_dropout)
 		
-		# self.init_weights()
+		# self.init_weights()	
 	
-	
-	def init_weights(self):
-		for name, param in self.named_parameters():
-			if "BERT" in name or "bias" in name:
-				continue
-			else:
-				torch.nn.init.xavier_uniform_(param)
+	# def init_weights(self):
+	# 	for name, param in self.named_parameters():
+	# 		if "BERT" in name or "bias" in name:
+	# 			continue
+	# 		else:
+	# 			torch.nn.init.xavier_uniform_(param)
 
 
 	def forward(self, features, attentions, old_features, node_order, adjacency_list, edge_order, root_node):
@@ -355,14 +373,17 @@ class TreeLSTM(torch.nn.Module):
 		h = torch.zeros(batch_size, self.out_features, device=device)		
 		c = torch.zeros(batch_size, self.out_features, device=device)
 		
-		if self.model_name == 'XLNET':
-			hidden_states = self.BERT_model(input_ids=features, attention_mask=attentions)
-			hidden_states = hidden_states[0]
-			# print(len(hidden_states))
-			print(hidden_states[0])
-			# print(hidden_states[0].size)
-		else:
-			hidden_states,_ = self.BERT_model(input_ids=features, attention_mask=attentions)
+		# if self.model_name == 'XLNET':
+		# 	hidden_states = self.BERT_model(input_ids=features, attention_mask=attentions)
+		# 	hidden_states = hidden_states[0]
+		# 	# print(len(hidden_states))
+		# 	print(hidden_states[0])
+		# 	# print(hidden_states[0].size)
+		# else:
+		
+		bert_outputs = self.BERT_model(input_ids=features, attention_mask=attentions)
+		hidden_states = bert_outputs[0]
+		att = bert_outputs[-1]
 
 		if self.mode=="cls":
 			output_vectors = hidden_states[:,0]
@@ -390,7 +411,7 @@ class TreeLSTM(torch.nn.Module):
 		# pred_out = F.log_softmax(logits_out, dim = 1)
 		# pred_out = F.softmax(logits_out, dim = 1)
 		
-		return h, logits_out, c
+		return h, logits_out, c, att
 
 	
 	def _run_lstm(self, iteration, h, c, features, node_order, adjacency_list, edge_order):
@@ -485,30 +506,31 @@ def split_data(trees, frac):
 	return train_li, val_li
 
 
+# if MODEL_NAME == 'BERT':
+# 	# tree_path = './PT_FeatBERT40_maxR5/'
+# 	if TREE_VERSION == "new":
+# 		tree_path = './PT_PHEME5_FeatBERT40_Depth5_maxR5/'
+# 	else:
+# 		tree_path = './Parsed-Trees-Pad32_FeatBERT40_Depth5_maxR5/'
+# elif MODEL_NAME == 'ROBERTA':
+# 	# tree_path = './PT_FeatROBERTA40_maxR5/'
+# 	tree_path = './PT_PHEME5_FeatROBERTA40_Depth5_maxR5/'
+# elif MODEL_NAME == 'XLNET':
+# 	# tree_path = './PT_FeatXLNET40_maxR5/'
+# 	tree_path = './PT_PHEME5_FeatXLNET40_Depth5_maxR5/'
+# elif MODEL_NAME =='T5':
+# 	# tree_path = './PT_FeatT540_maxR5/'
+# 	tree_path = './PT_PHEME5_FeatT540_Depth5_maxR5/'
+
 if MODEL_NAME == 'BERT':
-	# tree_path = './PT_FeatBERT40_maxR5/'
-	if TREE_VERSION == "new":
-		# tree_path = './PT_PHEME5_FeatBERT40_Depth5_maxR5/'
-		tree_path = './PT_PHEME5_FeatBERT40_Depth5_maxR5_MTL/'
-	else:
-		tree_path = './Parsed-Trees-Pad32_FeatBERT40_Depth5_maxR5/'
+	tree_path = '/home/rajdeep/MTL_VeriSumm/data/features/PT_PHEME5_FeatBERT40_Depth5_maxR5_MTL_Final/'
 elif MODEL_NAME == 'ROBERTA':
-	# tree_path = './PT_FeatROBERTA40_maxR5/'
-	tree_path = './PT_PHEME5_FeatROBERTA40_Depth5_maxR5/'
-elif MODEL_NAME == 'XLNET':
-	# tree_path = './PT_FeatXLNET40_maxR5/'
-	tree_path = './PT_PHEME5_FeatXLNET40_Depth5_maxR5/'
-elif MODEL_NAME =='T5':
-	# tree_path = './PT_FeatT540_maxR5/'
-	tree_path = './PT_PHEME5_FeatT540_Depth5_maxR5/'
-else:
-	# Default BERT
-	# tree_path = './PT_FeatBERT40_maxR5/'
-	tree_path = './PT_PHEME5_FeatBERT40_Depth5_maxR5/'
+	tree_path = '/home/rajdeep/MTL_VeriSumm/data/features/PT_PHEME5_FeatROBERTA40_Depth5_maxR5_MTL_Final/'
+elif MODEL_NAME == 'BERTWEET':
+	tree_path = '/home/rajdeep/MTL_VeriSumm/data/features/PT_PHEME5_FeatBERTWEET40_Depth5_maxR5_MTL_Final/'
 
 if NO_OF_EVENTS == 4:
 	files = ['charliehebdo.txt', 'germanwings-crash.txt', 'ottawashooting.txt','sydneysiege.txt']
-	# files = ['ottawashooting.txt']
 else:
 	files = ['charliehebdo.txt', 'ferguson.txt', 'germanwings-crash.txt', 'ottawashooting.txt','sydneysiege.txt']
 
@@ -520,16 +542,16 @@ for filename in files:
 	tree_li[filename]=[]
 	for row in input_file:
 		s = row.strip().split('\t')
-		tweet_id = s[0]
+		tweet_id = int(s[0])
 		curr_tree = eval(s[1])
 		# try:
-		curr_tensor = convert_tree_to_tensors(curr_tree)
+		curr_tensor = convert_tree_to_tensors(curr_tree, tweet_id)
 		# except Exception as e:
 		#     # print(e)
 		#     continue
-
 		tree_li[filename].append(curr_tensor)
 		# tree_li.append(curr_tree)
+
 	random.shuffle(tree_li[filename])
 	# val_len = int(0.1*len(tree_li[filename]))
 	# val_li[filename] = (tree_li[filename][:val_len])
@@ -542,7 +564,7 @@ for filename in files:
 from sklearn.utils.class_weight import compute_class_weight
 weight_vec = {}
 pos_weight_vec = {}
-for test_file in ["ottawashooting.txt"]:
+for test_file in files:
 	y = []
 	label_dist = [0, 0]
 	for filename in files:		
@@ -553,9 +575,8 @@ for test_file in ["ottawashooting.txt"]:
 				y.append(int(tree['root_l'].tolist()[0][1]))
 				file_dist[int(tree['root_l'].tolist()[0][1])] += 1
 				label_dist[int(tree['root_l'].tolist()[0][1])] += 1
-			# print(f'{filename} has {file_dist[0]} non-rumors and {file_dist[1]} rumors')
+			
 	print(f'Total non-rumors: {label_dist[0]}, Total rumors: {label_dist[1]}')
-	# print(y)
 	weight_vec[test_file] = torch.tensor(compute_class_weight('balanced', numpy.unique(y), y)).to(device)
 	pos_weight = label_dist[0] / label_dist[1]
 	pos_weight_vec[test_file] = torch.tensor([pos_weight], dtype=torch.float32).to(device)
@@ -571,7 +592,7 @@ def train(tree_batch, test_file, mode="train"):
 	g_labels = []
 	
 	# try:
-	h, h_root, c = model(
+	h, h_root, c, att = model(
 		tree_batch['f'].to(device),
 		tree_batch['a'].to(device),
 		tree_batch['k'].to(device),
@@ -649,12 +670,11 @@ def train(tree_batch, test_file, mode="train"):
 		optimizer.step()
 	
 	# except Exception as e:
-	#     print("here error2 ",e)
+	#     print("error with tree: ",e)
 	#     err_count = 1
 	
 	return loss, pred_labels, g_labels, err_count
 
-TEST_FILE = "ottawashooting.txt"
 
 for lr in lr_list:
 	print("\n\n\nTraining with LR: ", lr)
@@ -664,32 +684,23 @@ for lr in lr_list:
 		if not test.startswith(TEST_FILE):
 			continue
 		
-		random.seed(seed_val)
-		numpy.random.seed(seed_val)
-		torch.manual_seed(seed_val)
-		torch.cuda.manual_seed(seed_val)
+		# random.seed(seed_val)
+		# numpy.random.seed(seed_val)
+		# torch.manual_seed(seed_val)
+		# torch.cuda.manual_seed(seed_val)
 		
-		# path = "./Models/"
-		path = "/content/drive/My Drive/stl_veri/"
-		name = path + "stl_verification_" + TEST_FILE
-		if IN_FEATURES == 808:
-			name = name + "_808_"
-		else:
-			name = name + "_768_"
-
-		if MODEL_NAME == "BERT":
-			name = name + "featBERT.pt"
-		elif MODEL_NAME == "ROBERTA":
-			name = name + "featROBERTA.pt"
-		elif MODEL_NAME == "XLNET":
-			name = name + "featXLNET.pt"
-		elif MODEL_NAME == 'T5':
-			name = name + "featT5.pt"
-		
-		model = TreeLSTM(MODEL_NAME, TRAINABLE_LAYERS, IN_FEATURES, OUT_FEATURES, CLASSIFIER_DROPOUT, mode="cls")
+		path = "./Models/"
+		# path = "./drive/My Drive/IIT_Kgp/Research/Disaster/BTP_Chandana_Vishnu/verification/Models/"
+		name = path + "stl_verification_" + TEST_FILE + "_" + str(IN_FEATURES) + "_feat" + MODEL_NAME + ".pt"
+		tweetconfig.output_attentions = False
+		tweetconfig.output_hidden_states = False	
+		model = TreeLSTM(MODEL_NAME, TRAINABLE_LAYERS, IN_FEATURES, OUT_FEATURES, CLASSIFIER_DROPOUT, mode="cls", tweetconfig=tweetconfig)
 		model.cuda(gpu_id)
 		# model.cuda()
-		test_model = TreeLSTM(MODEL_NAME, TRAINABLE_LAYERS, IN_FEATURES, OUT_FEATURES, CLASSIFIER_DROPOUT, mode="cls")
+		tweetconfig2 = copy.deepcopy(tweetconfig)
+		tweetconfig2.output_attentions = True
+		tweetconfig2.output_hidden_states = True
+		test_model = TreeLSTM(MODEL_NAME, TRAINABLE_LAYERS, IN_FEATURES, OUT_FEATURES, CLASSIFIER_DROPOUT, mode="cls", tweetconfig=tweetconfig2)
 		test_model.cuda(gpu_id)
 		# test_model.cuda()
 		
@@ -723,26 +734,25 @@ for lr in lr_list:
 		print("Size of test data", len(test_trees))		
 		print("\ntraining started....")
 		
-		prev_loss = 1
-		prev_acc = 0		
+		prev_loss = math.inf
+		prev_acc = 0
+
+		data_gen = DataLoader(
+			train_trees,
+			collate_fn=batch_tree_input,
+			batch_size=BATCH_SIZE,
+			shuffle = True)
+
+		val_gen = DataLoader(
+			val_data,
+			collate_fn=batch_tree_input,
+			batch_size=BATCH_SIZE,
+			shuffle = True)
+
 		for i in range(NUM_ITERATIONS):
 			
-			model.train()			
-			
-			data_gen = DataLoader(
-				train_trees,
-				collate_fn=batch_tree_input,
-				batch_size=BATCH_SIZE,
-				shuffle = True
-			)
+			model.train()
 
-			val_gen = DataLoader(
-				val_data,
-				collate_fn=batch_tree_input,
-				batch_size=BATCH_SIZE,
-				shuffle = True
-			)
-			
 			ground_labels = []
 			predicted_labels = []
 			j = 0
@@ -760,8 +770,10 @@ for lr in lr_list:
 			train_acc = accuracy_score(ground_labels, predicted_labels)
 			train_avg_loss /= j
 			
-			print("validation started..",len(val_data))
+			
+			print("validation started..", len(val_data))			
 			model.eval()
+			
 			val_ground_labels = []
 			val_predicted_labels= []
 			val_j = 0
@@ -777,7 +789,7 @@ for lr in lr_list:
 						val_avg_loss += loss
 					# torch.cuda.empty_cache()			
 			val_acc = accuracy_score(val_ground_labels, val_predicted_labels)
-			val_f1 = f1_score(val_ground_labels, val_predicted_labels)
+			# val_f1 = f1_score(val_ground_labels, val_predicted_labels)
 			val_avg_loss /= val_j
 			
 			if MODEL_SAVING_POLICY == "acc":
@@ -789,30 +801,37 @@ for lr in lr_list:
 					save_model(model, name, val_acc, val_avg_loss)
 					prev_loss = val_avg_loss
 			
-			print('Iteration ', i)
-			print("errors ",err_count)			
+			print('\nIteration ', i)
+			print("errors ", err_count)			
 			print('Training Loss: ', train_avg_loss)
 			print('Training accuracy: ', train_acc)	
 			print('Validation loss: ', val_avg_loss)			
 			print('Validation accuracy: ', val_acc)
-			print('Validation f1 score: ', val_f1)
-			print('Training confusion matrix: ', confusion_matrix(ground_labels, predicted_labels))
+			# print('Validation f1 score: ', val_f1)
+			# print('Training confusion matrix: ', confusion_matrix(ground_labels, predicted_labels))
+			
 			train_accuracy.append(train_acc)
 			val_accuracy.append(val_acc)
+			
 			# scheduler.step(val_acc)
 
-			if ((i+1) % 5 == 0 and i > 0):
+			if (i+1) % 5 == 0 and i > 0:
 				load_model(test_model, name)
 				print('Now Testing:', test_file)
-				acc = 0
 				total = 0
+				tweet_ids = []
 				predicted = []
+				prob = []
 				ground = []
+				token_attentions = []
+				# num_tokens = []
+				# tokenslist = []
+
 				test_model.eval()
 				with torch.no_grad():
 					for test in test_trees:
 						try:
-							h_test, h_test_root, c = test_model(
+							h_test, h_test_root, c, att = test_model(
 									test['f'].to(device),
 									test['a'].to(device),
 									test['k'].to(device),
@@ -824,7 +843,19 @@ for lr in lr_list:
 							)
 						except:
 							continue
-						
+						lastlayer_attention = att[-1][0]
+						lastlayer_attention = lastlayer_attention.to("cpu")
+						# print("shape of cls:", lastlayer_attention.shape)
+						a = torch.mean(lastlayer_attention, dim=0).squeeze(0)
+						# print("after mean:", a.shape)
+						cls_attentions = a[0]
+						token_attentions.append(cls_attentions)
+						# tokens = tokenizer.convert_ids_to_tokens(test['f'][0])
+						# tokenslist.append(tokens)
+						# num_tokens.append(int(torch.sum(test['a'][0]).item()))
+
+						tweet_ids.append(test['tweet_id'].item())
+
 						true_label_val = test['root_l'].to('cpu')					
 						true_label = true_label_val[0][1].item()
 						# print(true_label)
@@ -842,20 +873,24 @@ for lr in lr_list:
 						# pred_v, pred_label = torch.max(F.softmax(pred_logit, dim=1), 1)						
 						
 						predicted.append(pred_label)
+						prob.append(logit_after_sigmoid)
 						ground.append(true_label)
-						if pred_label == true_label:
-							acc += 1
+						
 						total += 1
 				
-				print(test_file, 'accuracy:', acc / total)
+				print(f'\nTotal Test trees evaluated: {total}')
 				accuracy = accuracy_score(ground, predicted)
 				print('Accuracy: %f' % accuracy)
 				# precision tp / (tp + fp)
 				precision = precision_score(ground, predicted)
 				print('Precision: %f' % precision)
+				precision = precision_score(ground, predicted, average='macro')
+				print('Macro Precision: %f' % precision)				
 				# recall: tp / (tp + fn)
 				recall = recall_score(ground, predicted)
 				print('Recall: %f' % recall)
+				recall = recall_score(ground, predicted, average='macro')
+				print('Macro Recall: %f' % recall)
 				# f1: 2 tp / (2 tp + fp + fn)
 				f1 = f1_score(ground, predicted)
 				print('F1 score: %f' % f1)
@@ -864,7 +899,22 @@ for lr in lr_list:
 				print("\n\n")
 				print(classification_report(ground, predicted, digits=5))
 				print("\n\n")
-				print('confusion matrix ', confusion_matrix(ground, predicted))            
+				print('confusion matrix ', confusion_matrix(ground, predicted))
+
+				df = pd.DataFrame({
+								"Tweet_ID": tweet_ids, 
+								"pred": predicted, 
+								"pred_prob": prob, 
+								"gt": ground,
+								# "Tokens": tokenslist, 
+								"Attentions": token_attentions}
+								# "Numtokens": num_tokens}
+							)
+				if L2_REGULARIZER == 'n':
+					df.to_pickle("STL_" + TEST_FILE + "_"  + MODEL_NAME + "_" + str(IN_FEATURES) + "_L2_n_LR_" + str(lr) + ".pkl")
+				else:
+					df.to_pickle("STL_" + TEST_FILE + "_"  + MODEL_NAME + "_" + str(IN_FEATURES) + "_L2_y_" + str(WEIGHT_DECAY) + "_LR_" + str(lr) + ".pkl")
+
 		
 		# plt.plot(numpy.array(train_accuracy))
 		# plt.plot(numpy.array(val_accuracy))
