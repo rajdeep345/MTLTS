@@ -8,7 +8,7 @@ Requirements
 *** Folders ***
 ------------------------------------------
 
-~~~
+```
 + ./Data - Contains the preprocessed data for Summary and Trees generated for Verification
 + ./Codes/MTLVS - Contains codes for model generating verified summaries using Multi-Task Learning 
 + ./Codes/HMTLVS - Contains codes for model generating verified summaries using Hierarchical Multi-Task Learning
@@ -20,7 +20,7 @@ Requirements
 	-  LimeWordClouds.py
 	-  AttentionPlots.py
 	-  1DLossPlot.py
-~~~
+```
 
 ------------------------------------------
 *** Models ***
