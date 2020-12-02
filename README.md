@@ -50,8 +50,15 @@ Encoder -> Verification Layers -> Summary Layers
 ------------------------------------------
 *** Dependencies ***
 ------------------------------------------
-
+Pandas 1.1.1
 
 ------------------------------------------
 *** Instructions to run ***
 ------------------------------------------
+For generating 1-D Loss Plot for comparing MTLVS and HMTLVS
+~~~
+PLACE - place for which plot has to be generated
+tree_path - path to best MTL model 
+path - path to best HMTL model
+!python 1DLossPlot.py
+~~~
