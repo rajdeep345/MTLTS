@@ -1,1 +1,1 @@
-# HMTLVS: A Hierarchical Multi-task Learning Based Solution to Verify and Summarize Crisis-related Microblogs
+# MTLVS: A Multi-Task Framework to Verify and Summarize Crisis-Related Microblogs
