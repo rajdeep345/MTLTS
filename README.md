@@ -83,7 +83,7 @@ python generate_trees.py
 ~~~
 
 ### Training the Models
-Step1: Download BERTweet from https://github.com/VinAIResearch/BERTweet
+Step1: Download BERTweet(Bertweet_base_transformers) from https://github.com/VinAIResearch/BERTweet and save it under the root folder.
 
 Step2: 
 ### Analysis
