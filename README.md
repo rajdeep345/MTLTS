@@ -84,9 +84,18 @@ python generate_trees.py
 ~~~
 
 ### Training the Models
-Step1: Download BERTweet(Bertweet_base_transformers) from https://github.com/VinAIResearch/BERTweet and save it under the root folder.
+Step1: Download BERTweet(Bertweet_base_transformers) from https://github.com/VinAIResearch/BERTweet and save it under the root folder MTLVS.  
+Step2: For training models using Leave-one-out principle and performing grid search  
+MTLVS:  
+~~~
+python ./Codes/MTLVS/grid_search_mtl.py
+~~~
+STLV: 
+~~~
+python ./Codes/STLV/grid_search_stlv.py
+~~~
+Similar scripts can be written for taining HMTLVS(Codes/HMTLVS/hmtl4_final.py) and STLS(Codes/STLS/stl_summ.py)
 
-Step2: 
 ### Analysis
 For generating 1-D Loss Plot for comparing MTLVS and HMTLVS
 ~~~
