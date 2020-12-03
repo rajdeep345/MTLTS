@@ -62,7 +62,7 @@ Additional files required - slang.txt, contractions.txt
 python create_features.py
 
 Step2: Generate Trees 
-Additional files required - summary pickle files present in ./data/summary_dataframes , output files from Step1
+Additional files required - summary pickle files present in ./data/summary_dataframes , output files from Step1, all_tweets_posterior.txt
 python generate_trees.py
 ~~~
 
