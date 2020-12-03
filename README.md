@@ -77,18 +77,20 @@ python create_features.py
 ~~~
 
 Step5: Generate Trees from the data
-Additional files required - summary pickle files present in ./data/summary_dataframes, output files from Step1, all_tweets_posterior.txt
+Additional files required - summary pickle files present in ./data/summary_dataframes, output files from Step4 and all_tweets_posterior.txt
 ~~~
 python generate_trees.py
 ~~~
 
 ### Training the Models
 
-Analysis
+### Analysis
 For generating 1-D Loss Plot for comparing MTLVS and HMTLVS
 ~~~
+Set the following variables in oneD_loss_analysis.py
 PLACE - place for which plot has to be generated
-tree_path - path to best MTL model 
-path - path to best HMTL model
-!python oneD_loss_analysis.py
+tree_path - path to the best MTL model 
+path - path to the best HMTL model
+
+python oneD_loss_analysis.py
 ~~~
