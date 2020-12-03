@@ -2,7 +2,6 @@
 
 This repository contains codes and instructions for reproducing the results for our paper "MTLVS: A Multi-Task Framework to Verify and SummarizeCrisis-Related Microblogs".
 
-Requirements
 
 ------------------------------------------
 ## Folders
@@ -88,12 +87,12 @@ Step1: Download BERTweet(Bertweet_base_transformers) from https://github.com/Vin
 
 Step2: For training models using Leave-one-out principle and performing grid search  
 
-MTLVS:  
+**MTLVS**
 ~~~
 python ./Codes/MTLVS/grid_search_mtl.py
 ~~~
 
-STLV: 
+**STLV**
 ~~~
 python ./Codes/STLV/grid_search_stlv.py
 ~~~
