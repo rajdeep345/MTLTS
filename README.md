@@ -55,6 +55,17 @@ Pandas 1.1.1
 ------------------------------------------
 *** Instructions to run ***
 ------------------------------------------
+Dataset Preprocessing and Tree Generation
+~~~
+Step1: Create Features 
+Additional files required - slang.txt, contractions.txt 
+python create_features.py
+
+Step2: Generate Trees 
+Additional files required - summary pickle files present in ./data/summary_dataframes , output files from Step1
+python generate_trees.py
+~~~
+
 For generating 1-D Loss Plot for comparing MTLVS and HMTLVS
 ~~~
 PLACE - place for which plot has to be generated
