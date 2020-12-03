@@ -22,31 +22,6 @@ This repository contains codes and instructions for reproducing the results for 
 ```
 
 ------------------------------------------
-## Models
-------------------------------------------
-~~~
-Details of the Models implemented
-
-Encoder - BERT/BERTweet
-
-STLV:
-* Encoder + TreeLSTM
-* Encoder + FC
-* Encoder + LSTM
-* Fasttext + CNN - TextCNN
-
-STLS
-* Encoder + FC
-
-MTL - Verification + Summarization - Hard parameter sharing
-Verification - Encoder + TreeLSTM
-Summarization - Encoder + FC
-
-Hierarchical MTL(HMTL) - Verification followed by Summarization
-Encoder -> Verification Layers -> Summary Layers
-~~~
-
-------------------------------------------
 ## Dependencies
 ------------------------------------------
 Pandas 1.1.1
