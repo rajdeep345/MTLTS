@@ -83,7 +83,9 @@ python generate_trees.py
 ~~~
 
 ### Training the Models
+Step1: Download BERTweet from https://github.com/VinAIResearch/BERTweet
 
+Step2: 
 ### Analysis
 For generating 1-D Loss Plot for comparing MTLVS and HMTLVS
 ~~~
