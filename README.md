@@ -29,13 +29,13 @@ Details of the Models implemented
 
 Encoder - BERT/BERTweet
 
-STL Verification:
+STLV:
 * Encoder + TreeLSTM
 * Encoder + FC
 * Encoder + LSTM
 * Fasttext + CNN - TextCNN
 
-STL Summarization
+STLS
 * Encoder + FC
 
 MTL - Verification + Summarization - Hard parameter sharing
@@ -92,12 +92,13 @@ Step2: For training models using Leave-one-out principle and performing grid sea
 python ./Codes/MTLVS/grid_search_mtl.py
 ~~~
 
-**STLV**
+**STLV**  
 ~~~
 python ./Codes/STLV/grid_search_stlv.py
 ~~~
+For training the model on *ferguson.txt*, the events arguments should be manually changed to 5 or has to be passed as command line argument.
 
-Similar scripts can be written for taining HMTLVS(Codes/HMTLVS/hmtl4_final.py) and STLS(Codes/STLS/stl_summ.py)
+Similar scripts can be written for taining HMTLVS(Codes/HMTLVS/hmtl4_final.py) and STLS(Codes/STLS/stl_summ.py) and STLV w/o TreeLSTM(Codes/STLS/stlv_base.py)
 
 ### Analysis
 For generating 1-D Loss Plot for comparing MTLVS and HMTLVS
