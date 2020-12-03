@@ -9,17 +9,17 @@ Requirements
 ------------------------------------------
 
 ```
-+ ./Data - Contains the preprocessed data for Summary and Trees generated for Verification
-+ ./Codes/MTLVS - Contains codes for model generating verified summaries using Multi-Task Learning 
-+ ./Codes/HMTLVS - Contains codes for model generating verified summaries using Hierarchical Multi-Task Learning
-+ ./Codes/STL - Contains codes for performing Single task verification and summarization
-	-  STLV.py
-	-  STLS.py
-+ ./Codes/Analysis:
-	-  LimeExplanations.py
-	-  LimeWordClouds.py
-	-  AttentionPlots.py
-	-  1DLossPlot.py
++ ./data/gt_summ - contains ground truth summary tweets 
++ ./data/features - contains the files required for creating the features and generating the discourse trees from tweet threads.
++ ./data/features/PT_PHEME5_FeatBERT40_Depth5_maxR5_MTL_Final - contains preprocessed trees with features extracted using BERT.
++ ./data/features/PT_PHEME5_FeatBERTWEET40_Depth5_maxR5_MTL_Final - contains preprocessed trees with features extracted using BERTweet.
++ ./data/summary_dataframes - contains the processed datasets with extended "in-summary" tweets after running Codes/expand_summ_gt.py.
++ ./Codes - contains codes for pre-processing the datasets and create features.
++ ./Codes/STLS - contains code for training summarization as a single task
++ ./Codes/STLV - contains code for training tweet verification as a single task, both with (stlv_final.py) and without (stlv_base.py) Tree-LSMTs. Script (grid_search_stlv.py) for performing exhaustive grid search with several hyper-parameter settings is also included.
++ ./Codes/MTLVS - contains code for generating verified summaries using Multi-Task Learning.
++ ./Codes/HMTLVS - contains code for generating verified summaries using Hierarchical Multi-Task Learning.
++ ./Codes/Analysis - contains codes for generating explanations using LIME (Lime_explanations.ipynb) and comparing the one dimensional verification loss curves of MTLVS and HMTLVS (oneD_loss_analysis.py).
 ```
 
 ------------------------------------------
