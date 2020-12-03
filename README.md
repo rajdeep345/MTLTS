@@ -5,7 +5,7 @@ This repository containes codes for the paper "MTLVS: A Multi-Task Framework to 
 Requirements
 
 ------------------------------------------
-*** Folders ***
+## Folders
 ------------------------------------------
 
 ```
@@ -23,7 +23,7 @@ Requirements
 ```
 
 ------------------------------------------
-*** Models ***
+## Models
 ------------------------------------------
 ~~~
 Details of the Models implemented
@@ -48,28 +48,47 @@ Encoder -> Verification Layers -> Summary Layers
 ~~~
 
 ------------------------------------------
-*** Dependencies ***
+## Dependencies
 ------------------------------------------
 Pandas 1.1.1
 
 ------------------------------------------
-*** Instructions to run ***
+## Instructions to run
 ------------------------------------------
-Dataset Preprocessing and Tree Generation
-~~~
-Step1: Create Features 
-Additional files required - slang.txt, contractions.txt 
-python create_features.py
 
-Step2: Generate Trees 
-Additional files required - summary pickle files present in ./data/summary_dataframes , output files from Step1, all_tweets_posterior.txt
+### **Dataset Preprocessing and Tree Generation**
+
+Step1: Download pheme-rnr-dataset from https://figshare.com/articles/PHEME_dataset_of_rumours_and_non-rumours/4010619 and save it in ./data/pheme-rnr-dataset/. Download rumoureval2019 data from https://figshare.com/articles/RumourEval_2019_data/8845580 for stance labels. Save it in ./data/rumoureval2019. 
+
+Step2: Read data from pheme-rnr-dataset and ground truth summary labels
+~~~
+python create_data.py
+~~~
+
+Step3: Explan summary ground truth labels and store them in summary pickle files
+~~~
+python expand_summ_gt.py
+~~~
+
+Step4: Create Features from 
+Additional files required - slang.txt, contractions.txt 
+~~~
+python create_features.py
+~~~
+
+Step5: Generate Trees from the data
+Additional files required - summary pickle files present in ./data/summary_dataframes, output files from Step1, all_tweets_posterior.txt
+~~~
 python generate_trees.py
 ~~~
 
+### Training the Models
+
+Analysis
 For generating 1-D Loss Plot for comparing MTLVS and HMTLVS
 ~~~
 PLACE - place for which plot has to be generated
 tree_path - path to best MTL model 
 path - path to best HMTL model
-!python 1DLossPlot.py
+!python oneD_loss_analysis.py
 ~~~
