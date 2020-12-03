@@ -37,24 +37,24 @@ Download rumoureval2019 data from https://figshare.com/articles/RumourEval_2019_
 
 Step2: Read data from pheme-rnr-dataset and ground truth summary labels
 ~~~
-python create_data.py
+python ./Codes/create_data.py
 ~~~
 
 Step3: Explan summary ground truth labels and store them in summary pickle files
 ~~~
-python expand_summ_gt.py
+python ./Codes/expand_summ_gt.py
 ~~~
 
 Step4: Create Features   
 Additional files required - slang.txt, contractions.txt 
 ~~~
-python create_features.py
+python ./Codes/create_features.py
 ~~~
 
 Step5: Generate Trees from the data  
 Additional files required - summary pickle files present in ./data/summary_dataframes, output files from Step4 and all_tweets_posterior.txt
 ~~~
-python generate_trees.py
+python ./Codes/generate_trees.py
 ~~~
 
 ### Training the Models
@@ -83,5 +83,5 @@ PLACE - place for which plot has to be generated
 tree_path - path to the best MTL model 
 path - path to the best HMTL model
 
-python oneD_loss_analysis.py
+python ./Codes/oneD_loss_analysis.py
 ~~~
