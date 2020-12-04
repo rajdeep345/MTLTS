@@ -54,17 +54,17 @@ python ./Codes/expand_summ_gt.py
 
 **Step 4: Create Features**  
 Additional files required: 
-  - slang.txt 
-  - contractions.txt 
+  - ./Codes/slang.txt 
+  - ./Codes/contractions.txt 
 ~~~
 python ./Codes/create_features.py
 ~~~
 
 **Step 5: Generate Trees from the data**  
 Additional files required: 
-  - summary pickle files present in ./data/summary_dataframes (output from Step 3)
-  - output files from Step 4
-  - all_tweets_posterior.txt
+  - summary pickle files present in ./data/summary_dataframes (output pickle files from Step 3).
+  - output files from Step 4.
+  - ./data/features/all_tweets_posterior.txt
 ~~~
 python ./Codes/generate_trees.py
 ~~~
