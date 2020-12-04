@@ -75,14 +75,14 @@ python ./Codes/generate_trees.py
 
 Download BERTweet(Bertweet_base_transformers) from https://github.com/VinAIResearch/BERTweet and save it under the root folder MTLVS. 
 
-### Train STLS - Summarization as a single task
+**Train STLS - Summarization as a single task**
 ~~~
 python ./Codes/STLS/stl_summ.py [argument_list]
 ~~~
 
-### Train STLV - Tweet Verification as a single task
+**Train STLV - Tweet Verification as a single task**
   - Default values for various hyper-parameters are set in the code.
-  - Since we take a Leave-one-out principle (train on n-1 datasets, test on the remaining one), please set the default value for "events" to 5 or pass it from command line in order to train the model with *ferguson* dataset.
+  - Since we take a Leave-one-out principle (train on n-1 datasets, test on the remaining one), please set the default value for "events" to 5 or pass it from command line in order to train the model with the *ferguson* dataset.
   
 ~~~
 python ./Codes/STLV/stlv_final.py [argument_list]
@@ -97,8 +97,7 @@ In order to reproduce the performance of STLV without Tree-LSTMs
 python ./Codes/STLV/stlv_base.py [argument_list]
 ~~~
 
-### Train MTLVS - Our proposed architecture to jointly train verification and summarization using Multi-task Learning
-  
+**Train MTLVS - Our proposed architecture to jointly train verification and summarization using Multi-task Learning**
 ~~~
 python ./Codes/MTLVS/mtl_final.py [argument_list]
 ~~~
@@ -107,7 +106,7 @@ We have included the script to perform grid-search for hyper-parameter tuning fo
 python ./Codes/MTLVS/grid_search_mtl.py
 ~~~
 
-### Train HMTLVS - Hierarchical variant of MTLVS
+**Train HMTLVS - Hierarchical variant of MTLVS**
 ~~~
 python ./Codes/HMTLVS/hmtl_final.py [argument_list]
 ~~~
