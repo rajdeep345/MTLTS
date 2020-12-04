@@ -107,12 +107,12 @@ python ./Codes/HMTLVS/hmtl_final.py
 ## Analysis
 ------------------------------------------
 ### Comparing MTLVS and HMTLVS using 1-D Training Loss Curves
-Please set the following variables in oneD_loss_analysis.py
+Please set the following variables in ./Codes/Analysis/oneD_loss_analysis.py
   - PLACE - place for which plot has to be generated
-  - mtl_path - path to the best MTL model 
-  - hmtl_path - path to the best HMTL model
+  - mtl_path - path to the best-trained MTL model file
+  - hmtl_path - path to the best-trained HMTL model file
 ~~~
-python ./Codes/oneD_loss_analysis.py
+python ./Codes/Analysis/oneD_loss_analysis.py
 ~~~
 
 ### Explaining tweet verification predictions of MTLVS using LIME
