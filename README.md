@@ -116,7 +116,7 @@ python ./Codes/HMTLVS/hmtl_final.py [argument_list]
 ------------------------------------------
 ### Comparing MTLVS and HMTLVS using 1-D Training Loss Curves
 Please set the following variables in ./Codes/Analysis/oneD_loss_analysis.py
-  - PLACE - place for which plot has to be generated
+  - PLACE - event for which plot has to be generated
   - mtl_path - path to the best-trained MTL model file
   - hmtl_path - path to the best-trained HMTL model file
 ~~~
