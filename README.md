@@ -1,6 +1,6 @@
 # MTLVS: A Multi-Task Framework to Verify and Summarize Crisis-Related Microblogs
 
-This repository contains codes and instructions for reproducing the results for our paper "MTLVS: A Multi-Task Framework to Verify and SummarizeCrisis-Related Microblogs".
+This repository contains codes and instructions for reproducing the results for our paper "MTLVS: A Multi-Task Framework to Verify and Summarize Crisis-Related Microblogs".
 
 
 ------------------------------------------
@@ -51,6 +51,7 @@ python ./Codes/expand_summ_gt.py
 ~~~
 
 Step 4: Create Features
+
 Additional files required: 
   - slang.txt 
   - contractions.txt 
@@ -104,12 +105,13 @@ python ./Codes/HMTLVS/hmtl_final.py
 ------------------------------------------
 ## Analysis
 ------------------------------------------
-For generating 1-D Loss Plot for comparing MTLVS and HMTLVS
+### Comparing MTLVS and HMTLVS using 1-D Training Loss Curves
+Please set the following variables in oneD_loss_analysis.py
+  - PLACE - place for which plot has to be generated
+  - mtl_path - path to the best MTL model 
+  - hmtl_path - path to the best HMTL model
 ~~~
-Set the following variables in oneD_loss_analysis.py
-PLACE - place for which plot has to be generated
-tree_path - path to the best MTL model 
-path - path to the best HMTL model
-
 python ./Codes/oneD_loss_analysis.py
 ~~~
+
+### Explaining tweet verification predictions of MTLVS using LIME
