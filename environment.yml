@@ -113,5 +113,3 @@ dependencies:
     - wrapt==1.12.1
     - yarl==1.6.0
     - zipp==3.2.0
-prefix: /home/rajdeep/.conda/envs/pytorch
-
