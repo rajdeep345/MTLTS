@@ -210,7 +210,7 @@ def load_model(model, path):
 	print('Validation loss of the model is ', state.get('val_loss'))
 	return state.get('val_acc')
 
-tree_path = './data/PT_PHEME5_FeatBERT40_Depth5_maxR5_MTL_Final/'
+tree_path = 'MTLVS/data/features/PT_PHEME5_FeatBERT40_Depth5_maxR5_MTL_Final/'
 files = ['charliehebdo.txt', 'ottawashooting.txt', 'sydneysiege.txt','germanwings-crash.txt']
 data = []
 for filename in files:
@@ -255,7 +255,7 @@ class TreeLSTM(torch.nn.Module):
 		elif model_name == 'ROBERTA':
 			self.BERT_model = RobertaModel.from_pretrained("roberta-base", output_attentions=True)
 		elif model_name == 'BERTWEET':
-			self.BERT_model = RobertaModel.from_pretrained("./MTL_VeriSumm/BERTweet_base_transformers/model.bin", config=tweetconfig)
+			self.BERT_model = RobertaModel.from_pretrained("MTLVS/BERTweet_base_transformers/model.bin", config=tweetconfig)
 
 		self.W_iou = torch.nn.Linear(self.in_features, 3 * self.out_features)
 		self.U_iou = torch.nn.Linear(self.out_features, 3 * self.out_features, bias=False)
@@ -393,10 +393,12 @@ def compute_weights(alpha):
     test_model.load_state_dict(W3)
 
 model1 = TreeLSTM(MODEL_NAME, TRAINABLE_LAYERS, IN_FEATURES, OUT_FEATURES, CLASSIFIER_DROPOUT, mode="cls", tweetconfig=None)
+
 # path to trained MTL model
-mtl_path = "./data/stl_veri/mtl_german.pt"
+mtl_path = "MTLVS/models/mtl_german.pt"
 model2 = TreeLSTM(MODEL_NAME, TRAINABLE_LAYERS, IN_FEATURES, OUT_FEATURES, CLASSIFIER_DROPOUT, mode="cls", tweetconfig=None)
 load_model(model2, mtl_path)
+
 test_model = TreeLSTM(MODEL_NAME, TRAINABLE_LAYERS, IN_FEATURES, OUT_FEATURES, CLASSIFIER_DROPOUT, mode="cls", tweetconfig=None)
 test_model.cuda()
 
@@ -473,7 +475,7 @@ class Hierarchial_MTL(torch.nn.Module):
 		elif model_name == 'ROBERTA':
 			self.BERT_model = RobertaModel.from_pretrained("roberta-base", output_attentions=True)
 		elif model_name == 'BERTWEET':
-			self.BERT_model = RobertaModel.from_pretrained("/BERTweet_base_transformers/model.bin", config=tweetconfig)
+			self.BERT_model = RobertaModel.from_pretrained("MTLVS/BERTweet_base_transformers/model.bin", config=tweetconfig)
 		
 
 		self.W_iou = torch.nn.Linear(self.in_features, 3 * self.out_features)
@@ -678,10 +680,12 @@ def train_loop(model:Hierarchial_MTL, theta_dash=None):
 
 AB = 0
 model1_hmtl = Hierarchial_MTL(MODEL_NAME, TRAINABLE_LAYERS, IN_FEATURES, OUT_FEATURES, CLASSIFIER_DROPOUT, mode="cls", tweetconfig=None)
+
 # path to HMTL trained model
-hmtl_path = "./data/HMTL_weights/hmtl_german_2e-5.pt"
+hmtl_path = "MTLVS/models/hmtl_german_2e-5.pt"
 model2_hmtl = Hierarchial_MTL(MODEL_NAME, TRAINABLE_LAYERS, IN_FEATURES, OUT_FEATURES, CLASSIFIER_DROPOUT, mode="cls", tweetconfig=None)
 load_model(model2_hmtl, hmtl_path)
+
 test_model_hmtl = Hierarchial_MTL(MODEL_NAME, TRAINABLE_LAYERS, IN_FEATURES, OUT_FEATURES, CLASSIFIER_DROPOUT, mode="cls", tweetconfig=None)
 test_model_hmtl.cuda()
 
