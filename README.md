@@ -98,7 +98,7 @@ python ./Codes/MTLVS/mtl_final.py [argument_list] or python ./Codes/MTLVS/grid_s
 
 ### Train HMTLVS - Hierarchical variant of MTLVS
 ~~~
-python ./Codes/HMTLVS/hmtl4_final.py
+python ./Codes/HMTLVS/hmtl_final.py
 ~~~
 
 ------------------------------------------
