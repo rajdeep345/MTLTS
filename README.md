@@ -37,6 +37,7 @@ Preprocessed discourse trees are already available under ./data/features as ment
 Hence Steps 1 - 5 may be skipped.
 
 **Step 1**:  
+
 Download pheme-rnr-dataset from https://figshare.com/articles/PHEME_dataset_of_rumours_and_non-rumours/4010619 and save it in ./data/pheme-rnr-dataset/.  
 
 Download rumoureval2019 dataset from https://figshare.com/articles/RumourEval_2019_data/8845580 for stance labels and save it in ./data/rumoureval2019/. 
