@@ -473,7 +473,7 @@ class Hierarchial_MTL(torch.nn.Module):
 		elif model_name == 'ROBERTA':
 			self.BERT_model = RobertaModel.from_pretrained("roberta-base", output_attentions=True)
 		elif model_name == 'BERTWEET':
-			self.BERT_model = RobertaModel.from_pretrained("/home/rajdeep/MTL_VeriSumm/BERTweet_base_transformers/model.bin", config=tweetconfig)
+			self.BERT_model = RobertaModel.from_pretrained("/BERTweet_base_transformers/model.bin", config=tweetconfig)
 		
 
 		self.W_iou = torch.nn.Linear(self.in_features, 3 * self.out_features)
