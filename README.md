@@ -24,40 +24,48 @@ This repository contains codes and instructions for reproducing the results for 
 ------------------------------------------
 ## Dependencies
 ------------------------------------------
-Pandas 1.1.1
+Please create the required conda environment using environment.yml
+~~~
+conda env create -f environment.yml
+~~~
 
-------------------------------------------
-## Instructions to run
-------------------------------------------
+## **Dataset Preprocessing and Tree Generation**
 
-### **Dataset Preprocessing and Tree Generation**
+Preprocessed discourse trees are already available under ./data/features as mentioned above. 
+Hence Steps 1 - 5 may be skipped.
 
-Step1: Download pheme-rnr-dataset from https://figshare.com/articles/PHEME_dataset_of_rumours_and_non-rumours/4010619 and save it in ./data/pheme-rnr-dataset/.  
-Download rumoureval2019 data from https://figshare.com/articles/RumourEval_2019_data/8845580 for stance labels. Save it in ./data/rumoureval2019. 
+Step 1: 
+Download pheme-rnr-dataset from https://figshare.com/articles/PHEME_dataset_of_rumours_and_non-rumours/4010619 and save it in ./data/pheme-rnr-dataset/.  
+Download rumoureval2019 dataset from https://figshare.com/articles/RumourEval_2019_data/8845580 for stance labels and save it in ./data/rumoureval2019/. 
 
-Step2: Read data from pheme-rnr-dataset and ground truth summary labels
+Step 2: Read data from pheme-rnr-dataset and ground truth summary labels
 ~~~
 python ./Codes/create_data.py
 ~~~
 
-Step3: Explan summary ground truth labels and store them in summary pickle files
+Step 3: Expand summary ground truth labels as described in Section 3.1 of the paper and save the summary dataframes as pickle files.
 ~~~
 python ./Codes/expand_summ_gt.py
 ~~~
 
-Step4: Create Features   
-Additional files required - slang.txt, contractions.txt 
+Step 4: Create Features
+Additional files required: 
+  - slang.txt 
+  - contractions.txt 
 ~~~
 python ./Codes/create_features.py
 ~~~
 
-Step5: Generate Trees from the data  
-Additional files required - summary pickle files present in ./data/summary_dataframes, output files from Step4 and all_tweets_posterior.txt
+Step 5: Generate Trees from the data  
+Additional files required: 
+  - summary pickle files present in ./data/summary_dataframes (output from Step 3)
+  - output files from Step 4
+  - all_tweets_posterior.txt
 ~~~
 python ./Codes/generate_trees.py
 ~~~
 
-### Training the Models
+## Training the Models
 Step1: Download BERTweet(Bertweet_base_transformers) from https://github.com/VinAIResearch/BERTweet and save it under the root folder MTLVS. 
 
 Step2: For training models using Leave-one-out principle and performing grid search  
