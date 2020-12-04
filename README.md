@@ -124,4 +124,6 @@ python ./Codes/Analysis/oneD_loss_analysis.py
 ~~~
 
 ### Explaining tweet verification predictions of MTLVS using LIME
-Please refer to ./Codes/Analysis/Lime_explanations.ipynb
+Please refer to ./Codes/Analysis/Lime_explanations.ipynb which provides instructions on how to use LIME, more specifically the LimeTextExplainer.
+
+Please note that you need a trained model in order to explain a given data point.
