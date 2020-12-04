@@ -29,7 +29,9 @@ Please create the required conda environment using environment.yml
 conda env create -f environment.yml
 ~~~
 
+------------------------------------------
 ## **Dataset Preprocessing and Tree Generation**
+------------------------------------------
 
 Preprocessed discourse trees are already available under ./data/features as mentioned above. 
 Hence Steps 1 - 5 may be skipped.
@@ -65,25 +67,43 @@ Additional files required:
 python ./Codes/generate_trees.py
 ~~~
 
+------------------------------------------
 ## Training the Models
-Step1: Download BERTweet(Bertweet_base_transformers) from https://github.com/VinAIResearch/BERTweet and save it under the root folder MTLVS. 
+------------------------------------------
 
-Step2: For training models using Leave-one-out principle and performing grid search  
+Download BERTweet(Bertweet_base_transformers) from https://github.com/VinAIResearch/BERTweet and save it under the root folder MTLVS. 
 
-**MTLVS**
+### Train STLS - Summarization as a single task
 ~~~
-python ./Codes/MTLVS/grid_search_mtl.py
+python ./Codes/STLS/stl_summ.py
 ~~~
 
-**STLV**  
+### Train STLV - Tweet Verification as a single task
+  - Default values for various hyper-parameters are set in the code.
+  - Since we take a Leave-one-out principle (train on n-1 datasets, test on the remaining one), please set the default value for "events" to 5 or pass it from command line in order to train the model with *ferguson* dataset.
+  - We have included the script to perform grid-search for hyper-parameter tuning for this task.
 ~~~
-python ./Codes/STLV/grid_search_stlv.py
+python ./Codes/STLV/stlv_final.py [argument_list] or python ./Codes/STLV/grid_search_stlv.py
 ~~~
-For training the model on *ferguson.txt*, the events arguments should be manually changed to 5 or has to be passed as command line argument.
+In order to reproduce the performance of STLV without Tree-LSTMs
+~~~
+python ./Codes/STLV/stlv_base.py
+~~~
 
-Similar scripts can be written for taining HMTLVS(Codes/HMTLVS/hmtl4_final.py) and STLS(Codes/STLS/stl_summ.py) and STLV w/o TreeLSTM(Codes/STLS/stlv_base.py)
+### Train MTLVS - Our proposed architecture to jointly train verification and summarization using Multi-task Learning
+  - We have included the script to perform grid-search for hyper-parameter tuning for this task.
+~~~
+python ./Codes/MTLVS/mtl_final.py [argument_list] or python ./Codes/MTLVS/grid_search_mtl.py
+~~~
 
-### Analysis
+### Train HMTLVS - Hierarchical variant of MTLVS
+~~~
+python ./Codes/HMTLVS/hmtl4_final.py
+~~~
+
+------------------------------------------
+## Analysis
+------------------------------------------
 For generating 1-D Loss Plot for comparing MTLVS and HMTLVS
 ~~~
 Set the following variables in oneD_loss_analysis.py
