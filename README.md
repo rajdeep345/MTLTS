@@ -123,7 +123,18 @@ Please set the following variables in ./Codes/Analysis/oneD_loss_analysis.py
 python ./Codes/Analysis/oneD_loss_analysis.py
 ~~~
 
-### Explaining tweet verification predictions of MTLVS using LIME
+### Explaining tweet verification predictions of MTLVS using LIME (This analysis is however not reported in the current submission)
 Please refer to ./Codes/Analysis/Lime_explanations.ipynb which provides instructions on how to use LIME, more specifically the LimeTextExplainer.
 
 Please note that you need a trained model in order to explain a given data point.
+
+-------------------------------------------
+## Human Evaluation
+-------------------------------------------
+### Survey form given to the participants (Identities of summaries hidden, summaries randomly placed in each section)
+https://forms.gle/XqmpRzZgKmS7BAZk7
+
+### For Reviewers: (Same survey form, Identities of summaries revealed)
+https://forms.gle/GLS7sRRjgvamSdbv6
+
+
