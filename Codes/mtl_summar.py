@@ -836,7 +836,7 @@ def summar_train(args, net ,train_iter, val_iter, epcohs, mode = None):
 				loss.backward()
 				clip_grad_norm(net.parameters(), args.max_norm)
 				optimizer.step()
-				break
+				# break
 			train_loss = t_loss/s_loss
 
 		return train_loss
@@ -1335,7 +1335,7 @@ for lr in lr_list:
 				predicted_labels.extend(p_labels)
 				j = j+1
 				veri_train_avg_loss += loss
-				break
+				# break
 			veri_train_acc = accuracy_score(ground_labels, predicted_labels)
 			veri_train_avg_loss /= j
 
@@ -1364,7 +1364,7 @@ for lr in lr_list:
 			veri_val_f1 = f1_score(val_ground_labels, val_predicted_labels, average='macro')
 			val_avg_loss /= val_j
 			
-			save_model(model, name, veri_val_acc, val_avg_loss) 
+			# save_model(model, name, veri_val_acc, val_avg_loss) 
 
 			if MODEL_SAVING_POLICY == "acc":
 				if(prev_acc <= veri_val_acc):
@@ -1388,7 +1388,7 @@ for lr in lr_list:
 			# scheduler.step(veri_val_acc)
 			
 			# Testing on 5th and 10th epoch.
-			if 1 or ((i+1) % 5 == 0 and i > 0):
+			if ((i+1) % 5 == 0 and i > 0):
 				load_model(test_model, name)
 				print('Now Testing:', test_file)
 				total = 0
