@@ -401,7 +401,7 @@ class Hierarchial_MTL(BasicModule):
 		elif model_name == 'ROBERTA':
 			self.BERT_model = RobertaModel.from_pretrained("roberta-base", output_attentions=True)
 		elif model_name == 'BERTWEET':
-			self.BERT_model = RobertaModel.from_pretrained("../BERTweet_base_transformers/model.bin", config=tweetconfig)
+			self.BERT_model = RobertaModel.from_pretrained("../../BERTweet_base_transformers/model.bin", config=tweetconfig)
 		
 		# for name, param in self.BERT_model.named_parameters():
 		#   flag = False
