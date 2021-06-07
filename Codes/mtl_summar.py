@@ -207,7 +207,7 @@ elif MODEL_NAME == 'ROBERTA':
 # 	vocab = Dictionary()
 # 	vocab.add_from_file("BERTweet_base_transformers/dict.txt")
 	
-tweetconfig = RobertaConfig.from_pretrained("../BERTweet_base_transformers/config.json")
+tweetconfig = RobertaConfig.from_pretrained("../../BERTweet_base_transformers/config.json")
 
 sigmoid_fn = torch.nn.Sigmoid()
 
@@ -836,7 +836,7 @@ def summar_train(args, net ,train_iter, val_iter, epcohs, mode = None):
 				loss.backward()
 				clip_grad_norm(net.parameters(), args.max_norm)
 				optimizer.step()
-				# break
+				break
 			train_loss = t_loss/s_loss
 
 		return train_loss
@@ -896,10 +896,10 @@ def test_summar(dfp, net: Hierarchial_MTL):
 				aggregate_dict[tid]['count']+=1
 			hyp = [str(prob[index].item()) + "\t"+ doc[index] for index in topk_indices]
 			ref = summaries[doc_id]
-			with open(os.path.join(args.ref,str(file_id)+'.txt'), 'w') as f:
-				f.write(ref)
-			with open(os.path.join(args.hyp,str(file_id)+'.txt'), 'w') as f:
-				f.write('\n'.join(hyp))
+			# with open(os.path.join(args.ref,str(file_id)+'.txt'), 'w') as f:
+			# 	f.write(ref)
+			# with open(os.path.join(args.hyp,str(file_id)+'.txt'), 'w') as f:
+			# 	f.write('\n'.join(hyp))
 			start = stop
 			file_id = file_id + 1
 		del input_ids
@@ -1335,7 +1335,7 @@ for lr in lr_list:
 				predicted_labels.extend(p_labels)
 				j = j+1
 				veri_train_avg_loss += loss
-				# break
+				break
 			veri_train_acc = accuracy_score(ground_labels, predicted_labels)
 			veri_train_avg_loss /= j
 
@@ -1377,7 +1377,6 @@ for lr in lr_list:
 			
 			print('\nIteration ', i)
 			print('Verifier Training Loss: ', veri_train_avg_loss)
-			print('Summarizer Training Loss: ', summ_train_avg_loss)
 			print('Verification Training accuracy: ', veri_train_acc)
 			# print('Summarization Training accuracy: ', summ_train_acc)
 			print('Validation loss: ', val_avg_loss)
@@ -1389,7 +1388,7 @@ for lr in lr_list:
 			# scheduler.step(veri_val_acc)
 			
 			# Testing on 5th and 10th epoch.
-			if ((i+1) % 5 == 0 and i > 0):
+			if 1 or ((i+1) % 5 == 0 and i > 0):
 				load_model(test_model, name)
 				print('Now Testing:', test_file)
 				total = 0
