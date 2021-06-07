@@ -1,0 +1,14 @@
+*.pyc
+__pycache__
+
+Codes/checkpoints/*
+!checkpoints/.placeholder
+
+data/*
+!data/.placeholder
+!data/features
+!data/gt_summ
+
+
+.DS_Store
+
