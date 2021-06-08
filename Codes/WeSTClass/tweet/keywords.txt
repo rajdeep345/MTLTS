@@ -1,0 +1,4 @@
+0:ones,family,father,murdered,tignous,tragic,mourning,true,loved,political
+1:uniformed,ammunition,alleged,investigating,gunmen,war,memorial,fired,parisattacks,wearing
+2:opera,house,shortly,germanwings,shop,dusseldorf,signal,doors,heavily,armed,porte
+3:hope,having,okay,telling,everyone,thinking,scared,sad,situation,affected
