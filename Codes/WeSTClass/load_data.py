@@ -11,13 +11,13 @@ from sklearn.feature_extraction.text import TfidfTransformer
 import pandas as pd
 import pickle
 
-with open("MTLVS/data/features/summary_dataframes/dfc_0.57.pkl", 'rb') as f:
+with open("../../data/features/summary_dataframes/dfc_0.57.pkl", 'rb') as f:
     dfc = pickle.load(f)
-with open("MTLVS/data/features/summary_dataframes/dfg_0.72.pkl", 'rb') as f:
+with open("../../data/features/summary_dataframes/dfg_0.72.pkl", 'rb') as f:
     dfg = pickle.load(f)
-with open("MTLVS/data/features/summary_dataframes/dfo_0.6.pkl", 'rb') as f:
+with open("../../data/features/summary_dataframes/dfo_0.6.pkl", 'rb') as f:
     dfo = pickle.load(f)
-with open("MTLVS/data/features/summary_dataframes/dfs_0.6.pkl", 'rb') as f:
+with open("../../data/features/summary_dataframes/dfs_0.6.pkl", 'rb') as f:
     dfs = pickle.load(f)
 
 dfmain = pd.concat([dfc,dfs,dfg,dfo]).reset_index(drop=True)
