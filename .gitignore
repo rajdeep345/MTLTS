@@ -16,11 +16,4 @@ Codes/CaTE/src/cate
 Codes/CaTE/*.txt
 
 Codes/CaTE/preprocess/AutoPhrase
-
-Codes/CaTE/datasets/nyt/*
-!Codes/CaTE/datasets/nyt/README.md
-!Codes/CaTE/datasets/nyt/nyt_data.zip
-
-Codes/CaTE/datasets/yelp/*
-!Codes/CaTE/datasets/yelp/README.md
-!Codes/CaTE/datasets/yelp/yelp_data.zip
+Codes/CatE/word2vec_100.zip
