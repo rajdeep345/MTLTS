@@ -16,4 +16,4 @@ Codes/CaTE/src/cate
 Codes/CaTE/*.txt
 
 Codes/CaTE/preprocess/AutoPhrase
-Codes/CatE/word2vec_100.zip
+# Codes/CatE/word2vec_100.zip
