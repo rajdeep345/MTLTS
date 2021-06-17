@@ -91,12 +91,12 @@ python ./Codes/stlv_base.py [argument_list]
 
 **Train MTLVS - Our proposed architecture to jointly train verification and summarization using Multi-task Learning**
 ~~~
-python ./Codes/mtl_final.py [argument_list]
+python ./Codes/mtlvs.py [argument_list]
 ~~~
-We have included the script to perform grid-search for hyper-parameter tuning for this task.
+<!-- We have included the script to perform grid-search for hyper-parameter tuning for this task.
 ~~~
 python ./Codes/grid_search_mtl.py
-~~~
+~~~ -->
 
 
 ## Analysis
