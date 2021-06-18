@@ -4,7 +4,7 @@ __pycache__
 Codes/checkpoints/*
 !Codes/checkpoints/.placeholder
 
-Codes/outputs/*
+# Codes/outputs/*
 !Codes/outputs/.placeholder
 !Codes/outputs/hyp/.placeholder
 
