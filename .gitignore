@@ -6,6 +6,7 @@ Codes/checkpoints/*
 
 Codes/outputs/*
 !Codes/outputs/.placeholder
+!Codes/outputs/hyp/.placeholder
 
 data/*
 !data/.placeholder
