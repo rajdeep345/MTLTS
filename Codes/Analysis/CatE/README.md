@@ -8,7 +8,8 @@ The source code used for Discriminative Topic Mining via Category-Name Guided Te
 
 ## Example Datasets
 
-We provide two example datasets, the [New York Times annotated corpus](datasets/nyt/) and the [Yelp dataset challenge](datasets/yelp/), which are used in the paper. We also provide a shell script ``run.sh`` for compiling the source code and performing topic mining on the two example datasets. You should be able to obtain similar results as reported in the paper.
+The dataset is present in [Tweet Corpus](datasets/tweet/) which is used in the paper. Run the shell script ``run.sh`` for compiling the source code and performing topic mining on the tweet dataset. 
+
 
 ## Preparing Your Datasets
 
