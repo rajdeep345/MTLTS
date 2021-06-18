@@ -4,6 +4,9 @@ __pycache__
 Codes/checkpoints/*
 !Codes/checkpoints/.placeholder
 
+Codes/outputs/*
+!Codes/outputs/.placeholder
+
 data/*
 !data/.placeholder
 !data/features
