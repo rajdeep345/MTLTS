@@ -14,7 +14,7 @@ This repository contains codes and instructions for reproducing the results for 
 
   - ./Codes - contains codes for pre-processing the datasets, creating features, training the models, and performing content analysis of generated summaries.
   - ./Codes/Analysis - contains codes for analyzing MTLVS-generated summaries using WestClass and CatE.
-  - ./Codes/models and ./Codes/utils - contain codes required for running SummaRuNNer-based stl_summ.py and mtl_final.py.
+  - ./Codes/models and ./Codes/utils - contain codes required for running SummaRuNNer-based stl_summ.py and mtlvs.py.
   - ./Codes/checkpoints and ./Codes/data - Auxilliary folders required for running the main codes.
 
 ## Dependencies
@@ -78,6 +78,7 @@ Default values for various hyper-parameters are set in the code.
 ~~~
 python ./Codes/stlv_final.py [argument_list]
 ~~~
+Instructions to run the code and sample outputs can be found in STLS_(BERT_Summarunner).ipynb
 
 We have included the script used to perform grid-search for hyper-parameter tuning for this task.
 ~~~
@@ -93,6 +94,8 @@ python ./Codes/stlv_base.py [argument_list]
 ~~~
 python ./Codes/mtlvs.py [argument_list]
 ~~~
+Instructions to run the code and sample outputs can be found in mtlvs_setup.ipynb
+
 <!-- We have included the script to perform grid-search for hyper-parameter tuning for this task.
 ~~~
 python ./Codes/grid_search_mtl.py
@@ -101,6 +104,7 @@ python ./Codes/grid_search_mtl.py
 
 ## Analysis
 
+Codes and instructions to analyze MTLVS-generated summaries using WestClass and CatE can be found under ./Codes/Analysis.
 
 ## Human Evaluation
 
