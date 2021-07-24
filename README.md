@@ -29,23 +29,23 @@ conda env create -f environment.yml
 Preprocessed discourse trees are already available under ./data/features as mentioned above. 
 Hence Steps 1 - 5 may be skipped.
 
-**Step 1: Download data**
+### Step 1: Download data ###
 
 Download pheme-rnr-dataset from https://figshare.com/articles/PHEME_dataset_of_rumours_and_non-rumours/4010619 and save it in ./data/pheme-rnr-dataset/.  
 
 Download rumoureval2019 dataset from https://figshare.com/articles/RumourEval_2019_data/8845580 for stance labels and save it in ./data/rumoureval2019/. 
 
-**Step 2: Read data from pheme-rnr-dataset and ground truth summary labels**
+### Step 2: Read data from pheme-rnr-dataset and ground truth summary labels ###
 ~~~
 python ./Codes/create_data.py
 ~~~
 
-**Step 3: Expand summary ground truth labels as described in Section 3.1 of the paper and save the summary dataframes as pickle files.**
+### Step 3: Expand summary ground truth labels as described in Section 3.1 of the paper and save the summary dataframes as pickle files. ###
 ~~~
 python ./Codes/expand_summ_gt.py
 ~~~
 
-**Step 4: Create Features**  
+### Step 4: Create Features ###
 Additional files required: 
   - ./Codes/slang.txt 
   - ./Codes/contractions.txt 
@@ -53,7 +53,7 @@ Additional files required:
 python ./Codes/create_features.py
 ~~~
 
-**Step 5: Generate Trees from the data**  
+### Step 5: Generate Trees from the data ###
 Additional files required: 
   - summary pickle files present in ./data/summary_dataframes (output pickle files from Step 3).
   - output files from Step 4.
@@ -67,18 +67,18 @@ python ./Codes/generate_trees.py
 
 Download BERTweet(Bertweet_base_transformers) from https://github.com/VinAIResearch/BERTweet and save it under the root folder MTLVS. 
 
-**Train STLS - Summarization as a single task**
+### Train STLS - Summarization as a single task ###
 ~~~
 python ./Codes/stl_summ.py [argument_list]
 ~~~
+Instructions to run the code and sample outputs can be found in ``STLS_(BERT_Summarunner).ipynb``.
 
-**Train STLV - Tweet Verification as a single task**
+### Train STLV - Tweet Verification as a single task ###
 Default values for various hyper-parameters are set in the code.
   
 ~~~
 python ./Codes/stlv_final.py [argument_list]
 ~~~
-Instructions to run the code and sample outputs can be found in STLS_(BERT_Summarunner).ipynb
 
 We have included the script used to perform grid-search for hyper-parameter tuning for this task.
 ~~~
@@ -90,11 +90,20 @@ In order to reproduce the performance of STLV without Tree-LSTMs
 python ./Codes/stlv_base.py [argument_list]
 ~~~
 
-**Train MTLVS - Our proposed architecture to jointly train verification and summarization using Multi-task Learning**
+### Train MTLVS - Our proposed architecture to jointly train verification and summarization using Multi-task Learning ###
 ~~~
 python ./Codes/mtlvs.py [argument_list]
 ~~~
-Instructions to run the code and sample outputs can be found in mtlvs_setup.ipynb
+Instructions to run the code and sample outputs can be found in ``mtlvs_setup.ipynb``.
+
+``mtlvs.py`` saves a dataframe ``dfsum.pkl`` that contains all necessary information to generate the final summary including the tweet-level predictions from the <i>Summarizer</i> and <i>Verifier</i> modules.
+
+Finally, we run ``ilp_summ.py`` that uses ``dfsum.pkl`` to generate the summary using <b>ILP</b> for various values of ``kappa``. It also calculates the summary statistics.
+~~~
+python ./Codes/ilp_summ.py
+~~~
+
+```
 
 <!-- We have included the script to perform grid-search for hyper-parameter tuning for this task.
 ~~~
