@@ -110,7 +110,7 @@ python ./Codes/grid_search_mtl.py
 
 ## Analysis
 
-Codes and instructions to analyze MTLVS-generated summaries using WestClass and CatE can be found under ./Codes/Analysis.
+Codes and instructions to analyze MTLVS-generated summaries using WestClass and CatE can be found under ``./Codes/Analysis``.
 
 ## Human Evaluation
 
