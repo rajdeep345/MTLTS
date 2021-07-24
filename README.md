@@ -103,13 +103,10 @@ Finally, we run ``ilp_summ.py`` that uses ``dfsum.pkl`` to generate the summary 
 python ./Codes/ilp_summ.py
 ~~~
 
-```
-
 <!-- We have included the script to perform grid-search for hyper-parameter tuning for this task.
 ~~~
 python ./Codes/grid_search_mtl.py
 ~~~ -->
-
 
 ## Analysis
 
