@@ -576,9 +576,11 @@ class Hierarchial_MTL(BasicModule):
 		# word level GRU
 		H = self.args.hidden_size
 		outputs = self.BERT_model(input_ids=input_ids, attention_mask=attention_masks)
+		print(f'outputs.shape {outputs.shape}')
 		# hidden representation of last layer 
 		# token_vecs = outputs.last_hidden_state
 		token_vecs = outputs[0]
+		print(f'token_vecs.shape {token_vecs.shape}')
 		# dimension : [N,max_len_sent,768] N: no of sentences
 		k=0
 		for i in token_vecs:
@@ -591,19 +593,24 @@ class Hierarchial_MTL(BasicModule):
 			else:
 				sen = sentence_embedding.unsqueeze(0)
 				emb = torch.cat((emb,sen),0)
-		
+		print(f'emb.shape {emb.shape}')
+		print(f'doc_lens {len(doc_lens)}')
 		torch.cuda.empty_cache()
 		k=0
-		x = self.pad_doc(emb,doc_lens)
+		x = self.pad_doc(emb,doc_lens)	
 		sent_out = self.sent_RNN(x)[0]
+		print(f'sent_out {sent_out.shape}')
 		docs = self.max_pool1d(sent_out,doc_lens)
+		print(f'docs {docs.shape}')
 		del emb
 		torch.cuda.empty_cache()
 		probs = []
 		
 		for index,doc_len in enumerate(doc_lens):
 			valid_hidden = sent_out[index,:doc_len,:]                            # (doc_len,2*H)
+			print(f'valid_hidden {valid_hidden.shape}')
 			doc = F.tanh(self.fc(docs[index])).unsqueeze(0)
+			print(f'doc {doc.shape}')
 			s = Variable(torch.zeros(1,2*HH))
 			if self.args.device is not None:
 				s = s.cuda()
@@ -611,19 +618,22 @@ class Hierarchial_MTL(BasicModule):
 				h = h.view(1, -1)                                                # (1,2*H)
 				# get position embeddings
 				abs_index = Variable(torch.LongTensor([[position]]))
+				print(f'abs_index {abs_index.shape}')
 				if self.args.device is not None:
 					abs_index = abs_index.cuda()
 				abs_features = self.abs_pos_embed(abs_index).squeeze(0)
-
+				print(f'abs_features {abs_features.shape}')
 				rel_index = int(round((position + 1) * 9.0 / doc_len))
 				rel_index = Variable(torch.LongTensor([[rel_index]]))
+				print(f'rel_index {rel_index.shape}')
 				if self.args.device is not None:
 					rel_index = rel_index.cuda()
 				rel_features = self.rel_pos_embed(rel_index).squeeze(0)
-
+				print(f'rel_features {rel_features.shape}')
 				# classification layer
 				content = self.content(h)
 				salience = self.salience(h,doc)
+				print(f'salience {salience.shape}')
 				novelty = -1 * self.novelty(h,F.tanh(s))
 				abs_p = self.abs_pos(abs_features)
 				rel_p = self.rel_pos(rel_features)
@@ -1026,8 +1036,8 @@ for test_file in files:
 	print('Statistics of training corpus:')
 	print(f'Total non-rumors: {label_dist[0]}, Total rumors: {label_dist[1]}')
 	print(f'Total non-summary-tweets: {summ_label_dist[0]}, Total summary-tweets: {summ_label_dist[1]}')
-	weight_vec[test_file] = torch.tensor(compute_class_weight('balanced', numpy.unique(y), y)).to(device)
-	summ_weight_vec[test_file] = torch.tensor(compute_class_weight('balanced', numpy.unique(summ_y), summ_y)).to(device)
+	weight_vec[test_file] = torch.tensor(compute_class_weight(class_weight='balanced', classes=numpy.unique(y), y=y)).to(device)
+	summ_weight_vec[test_file] = torch.tensor(compute_class_weight(class_weight='balanced', classes=numpy.unique(summ_y), y=summ_y)).to(device)
 	pos_weight = label_dist[0] / label_dist[1]
 	pos_weight_vec[test_file] = torch.tensor([pos_weight], dtype=torch.float32).to(device)
 	summ_pos_weight = summ_label_dist[0] / summ_label_dist[1]
