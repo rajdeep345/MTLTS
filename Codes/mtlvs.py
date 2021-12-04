@@ -441,7 +441,6 @@ class Hierarchial_MTL(BasicModule):
 
 		V = args.embed_num
 		D = args.embed_dim
-		H = args.hidden_size
 		S = args.seg_num
 		P_V = args.pos_num
 		P_D = args.pos_dim
@@ -536,6 +535,7 @@ class Hierarchial_MTL(BasicModule):
 		elif trainable_part == 'summarizer':
 			# h_root, veri_logits_out = self.verify_forward(h, c, output_vectors, node_order, adjacency_list, edge_order, root_node)
 			# return veri_logits_out, self.summarize_forward(h_root, veri_logits_out, output_vectors, root_node), att
+			# we are not calling this. We can summarrunner_forward() directly
 			return self.summarunner_forward(bert_outputs,doc_lens)	
 
 
@@ -574,7 +574,6 @@ class Hierarchial_MTL(BasicModule):
 
 	def summarunner_forward(self, input_ids,attention_masks,doc_lens):
 		# word level GRU
-		H = self.args.hidden_size
 		outputs = self.BERT_model(input_ids=input_ids, attention_mask=attention_masks)
 		# hidden representation of last layer 
 		# token_vecs = outputs.last_hidden_state
@@ -602,13 +601,13 @@ class Hierarchial_MTL(BasicModule):
 		probs = []
 		
 		for index,doc_len in enumerate(doc_lens):
-			valid_hidden = sent_out[index,:doc_len,:]                            # (doc_len,2*H)
+			valid_hidden = sent_out[index,:doc_len,:]                            
 			doc = F.tanh(self.fc(docs[index])).unsqueeze(0)
 			s = Variable(torch.zeros(1,2*HH))
 			if self.args.device is not None:
 				s = s.cuda()
 			for position, h in enumerate(valid_hidden):
-				h = h.view(1, -1)                                                # (1,2*H)
+				h = h.view(1, -1)                                                
 				# get position embeddings
 				abs_index = Variable(torch.LongTensor([[position]]))
 				if self.args.device is not None:

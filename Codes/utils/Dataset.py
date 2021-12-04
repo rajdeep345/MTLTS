@@ -72,7 +72,7 @@ class Custom_Dataset(Dataset):
         self.docsize = docsize
 
     def __len__(self):
-        s = sum([math.ceil(len(p)/self.docsize) for p in placelist])
+        s = sum([math.ceil(len(p)/self.docsize) for p in self.placelist])
         return s
     
     def __getitem__(self, index):
