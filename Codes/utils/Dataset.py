@@ -72,7 +72,7 @@ class Custom_Dataset(Dataset):
         self.docsize = docsize
 
     def __len__(self):
-        s = sum([math.ceil(len(p)/self.docsize) for p in placelist])
+        s = sum([math.ceil(len(p)/self.docsize) for p in self.placelist])
         return s
     
     def __getitem__(self, index):
@@ -92,6 +92,7 @@ class Custom_Dataset(Dataset):
 def createplacelist(traindflist, valdflist, testdf):
     maxlen = max([len(i) for i in traindflist])
     r = math.ceil(maxlen/64)
+    print(f'r:{r}')
     trainplacelist = [Place(i,replicate=r) for i in traindflist]
     valplacelist = [Place(i,replicate=r) for i in valdflist]
     testplacelist = [Place(testdf, replicate=r)]

@@ -151,8 +151,8 @@ if __name__ == "__main__":
 	print(f'NUM_ITERATIONS = {NUM_ITERATIONS}')
 	BATCH_SIZE = args.bs
 	print(f'BATCH_SIZE = {BATCH_SIZE}')
-	lr_list = [1e-6, 2e-6, 5e-6, 1e-5]
-	# lr_list = [args.lr]
+	# lr_list = [1e-6, 2e-6, 5e-6, 1e-5]
+	lr_list = [args.lr]
 	print(f'LEARNING_RATES = {str(lr_list)}')
 	TRAINABLE_LAYERS = [0,1,2,3,4,5,6,7,8,9,10,11]
 	print(f'TRAINABLE_LAYERS = {str(TRAINABLE_LAYERS)}')
@@ -576,7 +576,7 @@ class Hierarchial_MTL(BasicModule):
 		# word level GRU
 		H = self.args.hidden_size
 		outputs = self.BERT_model(input_ids=input_ids, attention_mask=attention_masks)
-		print(f'outputs.shape {outputs.shape}')
+		print(f'outputs.shape {len(outputs)}')
 		# hidden representation of last layer 
 		# token_vecs = outputs.last_hidden_state
 		token_vecs = outputs[0]
@@ -594,7 +594,7 @@ class Hierarchial_MTL(BasicModule):
 				sen = sentence_embedding.unsqueeze(0)
 				emb = torch.cat((emb,sen),0)
 		print(f'emb.shape {emb.shape}')
-		print(f'doc_lens {len(doc_lens)}')
+		print(f'doc_lens {doc_lens}')
 		torch.cuda.empty_cache()
 		k=0
 		x = self.pad_doc(emb,doc_lens)	
@@ -607,7 +607,7 @@ class Hierarchial_MTL(BasicModule):
 		probs = []
 		
 		for index,doc_len in enumerate(doc_lens):
-			valid_hidden = sent_out[index,:doc_len,:]                            # (doc_len,2*H)
+			valid_hidden = sent_out[index,:doc_len,:]                            
 			print(f'valid_hidden {valid_hidden.shape}')
 			doc = F.tanh(self.fc(docs[index])).unsqueeze(0)
 			print(f'doc {doc.shape}')
@@ -615,7 +615,8 @@ class Hierarchial_MTL(BasicModule):
 			if self.args.device is not None:
 				s = s.cuda()
 			for position, h in enumerate(valid_hidden):
-				h = h.view(1, -1)                                                # (1,2*H)
+				h = h.view(1, -1)
+				print(f'h {h.shape}')                                                
 				# get position embeddings
 				abs_index = Variable(torch.LongTensor([[position]]))
 				print(f'abs_index {abs_index.shape}')
@@ -828,7 +829,7 @@ def summar_train(args, net ,train_iter, val_iter, epcohs, mode = None):
 			t_loss = 0
 			s_loss = 0
 			for i,batch in enumerate(train_iter):
-				# print(batch)
+				pprint(batch)
 				input_ids,attention_masks,targets,_,doc_lens = vocab.make_features(batch)
 				input_ids,attention_masks,targets = Variable(input_ids),Variable(attention_masks), Variable(targets.float())
 				if use_gpu:
@@ -846,7 +847,8 @@ def summar_train(args, net ,train_iter, val_iter, epcohs, mode = None):
 				loss.backward()
 				clip_grad_norm(net.parameters(), args.max_norm)
 				optimizer.step()
-				# break
+				if i==0:
+					break
 			train_loss = t_loss/s_loss
 
 		return train_loss
@@ -1345,7 +1347,7 @@ for lr in lr_list:
 				predicted_labels.extend(p_labels)
 				j = j+1
 				veri_train_avg_loss += loss
-				# break
+				break
 			veri_train_acc = accuracy_score(ground_labels, predicted_labels)
 			veri_train_avg_loss /= j
 
