@@ -1,4 +1,4 @@
-# MTLVS: A Multi-Task Framework to Verify and Summarize Crisis-Related Microblogs
+# MTLVS: A Multi-Task Framework To Obtain Trustworthy Summaries From Crisis-Related Microblogs
 
 This repository contains codes and instructions for reproducing the results for our paper "MTLVS: A Multi-Task Framework to Verify and Summarize Crisis-Related Microblogs".
 
