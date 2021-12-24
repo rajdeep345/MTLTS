@@ -1,6 +1,6 @@
 # MTLTS: A Multi-Task Framework To Obtain Trustworthy Summaries From Crisis-Related Microblogs
 
-This repository contains codes and instructions for reproducing the results for our paper "MTLVS: A Multi-Task Framework to Verify and Summarize Crisis-Related Microblogs".
+This repository contains codes and instructions for reproducing the results for our WSDM 2022 paper "MTLTS: A Multi-Task Framework To Obtain Trustworthy Summaries From Crisis-Related Microblogs".
 
 ## Data Folders
 
@@ -13,7 +13,7 @@ This repository contains codes and instructions for reproducing the results for 
 ## Code Folders
 
   - ./Codes - contains codes for pre-processing the datasets, creating features, training the models, and performing content analysis of generated summaries.
-  - ./Codes/Analysis - contains codes for analyzing MTLVS-generated summaries using WestClass and CatE.
+  - ./Codes/Analysis - contains codes for analyzing MTLTS-generated summaries using WestClass and CatE.
   - ./Codes/models and ./Codes/utils - contain codes required for running SummaRuNNer-based stl_summ.py and mtlvs.py.
   - ./Codes/checkpoints and ./Codes/data - Auxilliary folders required for running the main codes.
 
@@ -85,18 +85,18 @@ We have included the script used to perform grid-search for hyper-parameter tuni
 python ./Codes/grid_search_stlv.py
 ~~~
 
-In order to reproduce the performance of STLV without Tree-LSTMs
+<!-- In order to reproduce the performance of STLV without Tree-LSTMs
 ~~~
 python ./Codes/stlv_base.py [argument_list]
-~~~
+~~~ -->
 
-### Train MTLVS - Our proposed architecture to jointly train verification and summarization using Multi-task Learning ###
+### Train MTLTS - Our proposed architecture to jointly train verification and summarization using Multi-task Learning ###
 ~~~
-python ./Codes/mtlvs.py [argument_list]
+python ./Codes/mtlts.py [argument_list]
 ~~~
-Instructions to run the code and sample outputs can be found in ``mtlvs_setup.ipynb``.
+Instructions to run the code and sample outputs can be found in ``mtlts_setup.ipynb``.
 
-``mtlvs.py`` saves a dataframe ``dfsum.pkl`` that contains all necessary information to generate the final summary including the tweet-level predictions from the <i>Summarizer</i> and <i>Verifier</i> modules.
+``mtlts.py`` saves a dataframe ``dfsum.pkl`` that contains all necessary information to generate the final summary including the tweet-level predictions from the <i>Summarizer</i> and <i>Verifier</i> modules.
 
 Finally, we run ``ilp_summ.py`` that uses ``dfsum.pkl`` to generate the summary using <b>ILP</b> for various values of ``kappa``. It also calculates the summary statistics.
 ~~~
@@ -110,12 +110,12 @@ python ./Codes/grid_search_mtl.py
 
 ## Analysis
 
-Codes and instructions to analyze MTLVS-generated summaries using WestClass and CatE can be found under ``./Codes/Analysis``.
+Codes and instructions to analyze MTLTS-generated summaries using WestClass and CatE can be found under ``./Codes/Analysis``.
 
 ## Human Evaluation
 
 ### Survey form given to the participants (Identities of summaries hidden, summaries randomly placed in each section)
 https://forms.gle/XqmpRzZgKmS7BAZk7
 
-### For Reviewers: (Same survey form, Identities of summaries revealed)
+### For Readers: (Same survey form, Identities of summaries revealed)
 https://forms.gle/GLS7sRRjgvamSdbv6
