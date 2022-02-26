@@ -8,16 +8,18 @@ class Vocab():
     def __init__(self):
         pass
     def make_features(self,batch,sent_trunc=32,doc_trunc=100,split_token='\n'):
-        sents_list,targets,doc_lens = [],[],[]
+        sents_list,targets,doc_lens,tweet_ids = [],[],[],[]
         # trunc document
         # print(batch)
-        for doc,label in zip(batch['doc'],batch['labels']):
+        for doc,label,tweetid in zip(batch['doc'],batch['labels'],batch['tweetid']):
             sents = doc.split(split_token)
             labels = label.split(split_token)
+            tweetids = tweetid.split(split_token)
             labels = [int(l) for l in labels]
             max_sent_num = min(doc_trunc,len(sents))
             sents = sents[:max_sent_num]
             labels = labels[:max_sent_num]
+            tweet_ids += tweetids[:max_sent_num]
             sents_list += sents
             targets += labels
             doc_lens.append(len(sents))
@@ -47,7 +49,7 @@ class Vocab():
         targets = torch.LongTensor(targets)
         summaries = batch['summaries']
 
-        return input_ids,attention_masks,targets,summaries,doc_lens
+        return input_ids,attention_masks,targets,summaries,doc_lens,tweet_ids
 
     def make_predict_features(self, batch, sent_trunc=150, doc_trunc=300, split_token='. '):
         sents_list, doc_lens = [],[]

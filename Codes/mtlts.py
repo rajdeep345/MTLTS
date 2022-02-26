@@ -1,3 +1,4 @@
+from collections import defaultdict
 import os
 import sys
 import math
@@ -572,7 +573,7 @@ class Hierarchial_MTL(BasicModule):
 		summ_logits_out = self.summ_fc2(summ_logits1)
 		return summ_logits_out
 
-	def summarunner_forward(self, input_ids,attention_masks,doc_lens):
+	def summarunner_forward(self, input_ids,attention_masks,doc_lens,tweetids,Global_verifier_prob):
 		# word level GRU
 		outputs = self.BERT_model(input_ids=input_ids, attention_mask=attention_masks)
 		# hidden representation of last layer 
@@ -599,13 +600,18 @@ class Hierarchial_MTL(BasicModule):
 		del emb
 		torch.cuda.empty_cache()
 		probs = []
-		
+		doc_tweet_list = []
+		prev = 0
+		for i in doc_lens:
+			doc_tweet_list.append(tweetids[prev:prev+i])
+			prev = prev+i
 		for index,doc_len in enumerate(doc_lens):
 			valid_hidden = sent_out[index,:doc_len,:]                            
 			doc = F.tanh(self.fc(docs[index])).unsqueeze(0)
 			s = Variable(torch.zeros(1,2*HH))
 			if self.args.device is not None:
 				s = s.cuda()
+			sentence_tweetids = doc_tweet_list[index]
 			for position, h in enumerate(valid_hidden):
 				h = h.view(1, -1)                                                
 				# get position embeddings
@@ -626,7 +632,7 @@ class Hierarchial_MTL(BasicModule):
 				novelty = -1 * self.novelty(h,F.tanh(s))
 				abs_p = self.abs_pos(abs_features)
 				rel_p = self.rel_pos(rel_features)
-				prob = F.sigmoid(content + salience + novelty + abs_p + rel_p + self.bias)
+				prob = F.sigmoid(content + salience + novelty + abs_p + rel_p + self.bias + Global_verifier_prob[sentence_tweetids[position]])
 				s = s + torch.mm(prob,h)
 				probs.append(prob)
 		del sent_out
@@ -775,19 +781,19 @@ def train_loop(model:Hierarchial_MTL, tree_batch, test_file, theta_dash=None, mo
 	if module == 'verifier':
 		return loss, pred_labels, pred_v, g_labels
 
-def eval_summar(net,vocab,data_iter,criterion):
+def eval_summar(net,vocab,data_iter,criterion,Global_verifier_prob):
 	with torch.no_grad():
 		net.eval()
 		total_loss = 0
 		batch_num = 0
 		for batch in data_iter:
-			input_ids,attention_masks,targets,_,doc_lens = vocab.make_features(batch)
+			input_ids,attention_masks,targets,_,doc_lens,tweetids = vocab.make_features(batch)
 			input_ids,attention_masks,targets = Variable(input_ids),Variable(attention_masks), Variable(targets.float())
 			if torch.cuda.is_available():
 				targets = targets.cuda()
 				input_ids = input_ids.cuda()
 				attention_masks = attention_masks.cuda()
-			probs = net.summarunner_forward(input_ids,attention_masks,doc_lens)
+			probs = net.summarunner_forward(input_ids,attention_masks,doc_lens,tweetids,Global_verifier_prob)
 			loss = criterion(probs,targets)
 			total_loss += loss.item()
 			batch_num += 1
@@ -799,7 +805,7 @@ def eval_summar(net,vocab,data_iter,criterion):
 		net.train()
 	return loss
 
-def summar_train(args, net ,train_iter, val_iter, epcohs, mode = None):
+def summar_train(args, net ,train_iter, val_iter, epcohs,Global_verifier_prob, mode = None):
 	# update args
 	acc_steps = 16
 	# build model
@@ -818,13 +824,13 @@ def summar_train(args, net ,train_iter, val_iter, epcohs, mode = None):
 			s_loss = 0
 			for i,batch in enumerate(train_iter):
 				# print(batch)
-				input_ids,attention_masks,targets,_,doc_lens = vocab.make_features(batch)
+				input_ids,attention_masks,targets,_,doc_lens,tweetids = vocab.make_features(batch)
 				input_ids,attention_masks,targets = Variable(input_ids),Variable(attention_masks), Variable(targets.float())
 				if use_gpu:
 					input_ids = input_ids.cuda()
 					attention_masks = attention_masks.cuda()
 				
-				probs = net.summarunner_forward(input_ids,attention_masks,doc_lens)
+				probs = net.summarunner_forward(input_ids,attention_masks,doc_lens,tweetids,Global_verifier_prob)
 				if use_gpu:
 					targets = targets.cuda()
 			
@@ -840,10 +846,10 @@ def summar_train(args, net ,train_iter, val_iter, epcohs, mode = None):
 
 		return train_loss
 	if mode == "eval":
-		cur_loss = eval_summar(net,vocab,val_iter,criterion)
+		cur_loss = eval_summar(net,vocab,val_iter,criterion,Global_verifier_prob)
 		return cur_loss 
 
-def test_summar(dfp, net: Hierarchial_MTL):
+def test_summar(dfp,Global_verifier_prob, net: Hierarchial_MTL):
 	dfp['Tweet_ID'] = dfp['Tweet_ID'].astype(int)
 	aggregate_dict = {int(tweetd):{'sum':0,'count':0} for tweetd in dfp.Tweet_ID}
 	vocab = utils.Vocab()
@@ -864,16 +870,16 @@ def test_summar(dfp, net: Hierarchial_MTL):
 	time_cost = 0
 	file_id = 1
 	for batch in test_iter:
-		input_ids,attention_masks,targets,summaries,doc_lens  = vocab.make_features(batch)
+		input_ids,attention_masks,targets,summaries,doc_lens,tweetids = vocab.make_features(batch)
 		input_ids,attention_masks,targets = Variable(input_ids),Variable(attention_masks), Variable(targets.float())
 		t1 = time()
 		if use_gpu:
 			input_ids = input_ids.cuda()
 			attention_masks = attention_masks.cuda()
 
-			probs = net.summarunner_forward(input_ids,attention_masks,doc_lens)
+			probs = net.summarunner_forward(input_ids,attention_masks,doc_lens,tweetids,Global_verifier_prob)
 		else:
-			probs = net.summarunner_forward(input_ids,attention_masks,doc_lens)
+			probs = net.summarunner_forward(input_ids,attention_masks,doc_lens,tweetids,Global_verifier_prob)
 		t2 = time()
 		time_cost += t2 - t1
 		start = 0
@@ -1025,8 +1031,8 @@ for test_file in files:
 	print('Statistics of training corpus:')
 	print(f'Total non-rumors: {label_dist[0]}, Total rumors: {label_dist[1]}')
 	print(f'Total non-summary-tweets: {summ_label_dist[0]}, Total summary-tweets: {summ_label_dist[1]}')
-	weight_vec[test_file] = torch.tensor(compute_class_weight('balanced', numpy.unique(y), y)).to(device)
-	summ_weight_vec[test_file] = torch.tensor(compute_class_weight('balanced', numpy.unique(summ_y), summ_y)).to(device)
+	weight_vec[test_file] = torch.tensor(compute_class_weight(class_weight='balanced', classes=numpy.unique(y), y=y)).to(device)
+	summ_weight_vec[test_file] = torch.tensor(compute_class_weight(class_weight='balanced',classes = numpy.unique(summ_y),  y=summ_y)).to(device)
 	pos_weight = label_dist[0] / label_dist[1]
 	pos_weight_vec[test_file] = torch.tensor([pos_weight], dtype=torch.float32).to(device)
 	summ_pos_weight = summ_label_dist[0] / summ_label_dist[1]
@@ -1338,8 +1344,12 @@ for lr in lr_list:
 			veri_train_acc = accuracy_score(ground_labels, predicted_labels)
 			veri_train_avg_loss /= j
 
+			# Placeholder for verifier dictionary.
+			# Global_verifier_prob = {}
+			Global_verifier_prob = defaultdict(lambda: 0.5)
+
 			print("train summarizer")
-			loss = summar_train(args, model,train_iter, val_iter, 1, mode = "train")
+			loss = summar_train(args, model,train_iter, val_iter, 1, Global_verifier_prob, mode = "train")
 			
 
  
@@ -1433,7 +1443,7 @@ for lr in lr_list:
 
 						total += 1
 				
-				aggregate_dict = test_summar(testdf,test_model)
+				aggregate_dict = test_summar(testdf,Global_verifier_prob,test_model)
 				
 				print(f'\nTotal Test trees evaluated: {total}')
 				accuracy = accuracy_score(veri_ground, veri_predicted)
