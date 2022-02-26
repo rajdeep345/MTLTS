@@ -602,9 +602,9 @@ class Hierarchial_MTL(BasicModule):
 		probs = []
 		doc_tweet_list = []
 		prev = 0
-		for i in len(doc_lens):
-			doc_tweet_list.append(tweetids[prev:prev+doc_lens[i]])
-			prev = prev + doc_lens[i]
+		for i in doc_lens:
+			doc_tweet_list.append(tweetids[prev:prev+i])
+			prev = prev+i
 		for index,doc_len in enumerate(doc_lens):
 			valid_hidden = sent_out[index,:doc_len,:]                            
 			doc = F.tanh(self.fc(docs[index])).unsqueeze(0)
@@ -781,7 +781,7 @@ def train_loop(model:Hierarchial_MTL, tree_batch, test_file, theta_dash=None, mo
 	if module == 'verifier':
 		return loss, pred_labels, pred_v, g_labels
 
-def eval_summar(net,vocab,data_iter,criterion):
+def eval_summar(net,vocab,data_iter,criterion,Global_verifier_prob):
 	with torch.no_grad():
 		net.eval()
 		total_loss = 0
@@ -793,7 +793,7 @@ def eval_summar(net,vocab,data_iter,criterion):
 				targets = targets.cuda()
 				input_ids = input_ids.cuda()
 				attention_masks = attention_masks.cuda()
-			probs = net.summarunner_forward(input_ids,attention_masks,doc_lens,tweetids)
+			probs = net.summarunner_forward(input_ids,attention_masks,doc_lens,tweetids,Global_verifier_prob)
 			loss = criterion(probs,targets)
 			total_loss += loss.item()
 			batch_num += 1
@@ -846,7 +846,7 @@ def summar_train(args, net ,train_iter, val_iter, epcohs,Global_verifier_prob, m
 
 		return train_loss
 	if mode == "eval":
-		cur_loss = eval_summar(net,vocab,val_iter,criterion)
+		cur_loss = eval_summar(net,vocab,val_iter,criterion,Global_verifier_prob)
 		return cur_loss 
 
 def test_summar(dfp,Global_verifier_prob, net: Hierarchial_MTL):
