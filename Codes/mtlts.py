@@ -1344,7 +1344,7 @@ for lr in lr_list:
 			veri_train_acc = accuracy_score(ground_labels, predicted_labels)
 			veri_train_avg_loss /= j
 
-			# Placeholder for verifier dictionary
+			# Placeholder for verifier dictionary.
 			# Global_verifier_prob = {}
 			Global_verifier_prob = defaultdict(lambda: 0.5)
 
